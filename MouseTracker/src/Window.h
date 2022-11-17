@@ -12,7 +12,7 @@ private:
 	GLFWwindow* m_Window = nullptr;
 	bool m_Resized = true;
 public:
-	Window(int width = 930, int height = 850, const char* title = "Mouse Tracker", GLFWmonitor* monitor = NULL, GLFWwindow* share = NULL);
+	Window(int width = 1600, int height = 920, const char* title = "Mouse Tracker", GLFWmonitor* monitor = NULL, GLFWwindow* share = NULL);
 	~Window();
 
 	// loop
