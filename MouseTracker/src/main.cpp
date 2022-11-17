@@ -9,7 +9,7 @@
 #include "Image.h"
 
 
-void ImageWindow(ImVec2 wSize, GLuint glImage, const Image& image)
+void ImageWindow(ImVec2 wSize, const Image& image)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("Image", (bool*)0, IMGUI_WINDOW_FLAGS);
@@ -21,7 +21,7 @@ void ImageWindow(ImVec2 wSize, GLuint glImage, const Image& image)
 
     const ImVec2 p = ImGui::GetCursorScreenPos();
     ImGui::SetCursorScreenPos(ImVec2(p.x + xPos, p.y));
-    ImGui::Image((void*)(intptr_t)glImage, { image.Resolution().x / y, image.Resolution().y / y });
+    ImGui::Image((void*)(intptr_t)image.GetGpuImage(), {image.Resolution().x / y, image.Resolution().y / y});
     ImGui::End();
     ImGui::PopStyleVar();
 }
@@ -33,27 +33,21 @@ int main()
     Monitor m;
     Image i(m.Resolution());
 
-    GLuint image = i.UploadTexture();
-
+    POINT pos;
     while (w.IsOpen())
     {
         w.Clear();
         w.ImGuiStartFrame();
 
-
-        POINT pos;
         if (GetCursorPos(&pos) == 0)
         {
             std::cerr << "GetCursorPos() error: " << GetLastError() << std::endl;
         }
         else
         {
-            //i.SetPixel(pos.x, pos.y, 0);
-            image = i.Update(image, pos.x, pos.y, 0);
-            std::cout << pos.x << " " << pos.y << std::endl;
+            i.Update(pos.x, pos.y, 0);
         }
-
-        ImageWindow(w.GetSize(), image, i);
+        ImageWindow(w.GetSize(), i);
 
         w.ImGuiRender();
         w.PollEvents();
