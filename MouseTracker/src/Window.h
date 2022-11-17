@@ -6,6 +6,13 @@
 
 #define IMGUI_WINDOW_FLAGS ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar
 
+struct VecI2
+{
+	int width;
+	int height;
+};
+
+
 class Window
 {
 private:
@@ -23,6 +30,7 @@ public:
 	inline void WaitEvents() const	{ glfwWaitEvents();							}
 
 	ImVec2 GetSize() const;
+	VecI2  GetResolution() const;
 
 	// ImGui
 	void ImGuiInit(const char* iniFileName = nullptr) const;

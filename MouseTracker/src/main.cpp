@@ -1,18 +1,14 @@
+#include <iostream>
+#include <cstring>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "ImGui/imgui.h"
-#include "stb_image.h"
+#include "stb/stb_image.h"
 
 #include "Window.h"
 
-bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_width, int* out_height)
+GLuint UploadTexture(const unsigned char* data, int width, int height)
 {
-    // Load from file
-    int image_width = 0;
-    int image_height = 0;
-    unsigned char* image_data = stbi_load(filename, &image_width, &image_height, NULL, 4);
-    if (image_data == NULL)
-        return false;
-
     // Create a OpenGL texture identifier
     GLuint image_texture;
     glGenTextures(1, &image_texture);
@@ -21,20 +17,9 @@ bool LoadTextureFromFile(const char* filename, GLuint* out_texture, int* out_wid
     // Setup filtering parameters for display
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); // This is required on WebGL for non power-of-two textures
-    //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); // Same
 
-    // Upload pixels into texture
-//#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-//    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-//#endif
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-    stbi_image_free(image_data);
-
-    *out_texture = image_texture;
-    *out_width = image_width;
-    *out_height = image_height;
-    return true;
+    glTexImage2D(GL_TEXTURE_2D, 0, 1, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
+    return image_texture;
 }
 
 
@@ -42,16 +27,19 @@ int main()
 {
     Window w;
 
-    GLuint image;
-    int width, height;
-    LoadTextureFromFile("2.png", &image, &width, &height);
+    unsigned char* data = new unsigned char[500 * 500];
+    std::memset(data, 0, 500 * 500);
+
+    int width = 500;
+    int height = 500;
+    GLuint image = UploadTexture(data, width, height);
 
     while (w.IsOpen())
     {
         w.Clear();
         w.ImGuiStartFrame();
 
-        ImGui::Begin("OpenGL Texture Text");
+        ImGui::Begin("Data");
         ImGui::Image((void*)(intptr_t)image, ImVec2((float)width, (float)height));
         ImGui::End();
 
@@ -59,4 +47,6 @@ int main()
         w.WaitEvents();
         w.Swap();
     }
+
+    delete[] data;
 }

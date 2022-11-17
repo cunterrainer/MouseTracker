@@ -58,6 +58,18 @@ ImVec2 Window::GetSize() const
 }
 
 
+VecI2 Window::GetResolution() const
+{
+    const GLFWvidmode* const mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
+    if (mode == NULL)
+    {
+        std::cerr << "Failed to retreive resolution\n";
+        return {};
+    }
+    return { mode->width, mode->height };
+}
+
+
 void Window::ImGuiInit(const char* iniFileName) const
 {
     ImGui::CreateContext();
