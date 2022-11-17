@@ -6,6 +6,7 @@
 #include "stb/stb_image.h"
 
 #include "Window.h"
+#include "Monitor.h"
 
 GLuint UploadTexture(const unsigned char* data, int width, int height)
 {
@@ -26,13 +27,12 @@ GLuint UploadTexture(const unsigned char* data, int width, int height)
 int main()
 {
     Window w;
+    Monitor m;
+    
+    unsigned char* data = new unsigned char[m.Pixel()];
+    std::memset(data, 0, m.Pixel());
 
-    unsigned char* data = new unsigned char[500 * 500];
-    std::memset(data, 0, 500 * 500);
-
-    int width = 500;
-    int height = 500;
-    GLuint image = UploadTexture(data, width, height);
+    GLuint image = UploadTexture(data, m.Width(), m.Height());
 
     while (w.IsOpen())
     {
@@ -40,7 +40,7 @@ int main()
         w.ImGuiStartFrame();
 
         ImGui::Begin("Data");
-        ImGui::Image((void*)(intptr_t)image, ImVec2((float)width, (float)height));
+        ImGui::Image((void*)(intptr_t)image, m.Resolution());
         ImGui::End();
 
         w.ImGuiRender();
