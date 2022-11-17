@@ -1,0 +1,14 @@
+.git/
+.vs/
+
+BIN/
+
+Makefile
+*.make
+
+*.sln
+
+*.user
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
