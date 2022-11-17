@@ -27,7 +27,7 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const char* mName)
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool tracking)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -35,8 +35,15 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const char* mName)
 
     ImGui::LabelText("Resolution", "%ux%u", (unsigned int)mRes.x, (unsigned int)mRes.y);
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", pos.x, pos.y);
-    ImGui::LabelText("Monitor", "%s", mName);
+    ImGui::LabelText("Monitor", "%ls %ls", mInfo.manufacturerName.c_str(), mInfo.userFriendlyName.c_str());
     
+    if(tracking)
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 128, 0, 255));
+    else
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(128, 0, 0, 255));
+    ImGui::LabelText("##Tracking", "Tracking [F9]");
+    ImGui::PopStyleColor();
+
     ImGui::End();
 }
 
@@ -48,32 +55,37 @@ int main()
     Image i(m.Resolution());
 
     std::vector<MonitorInfo> mInfo = GetMonitors();
-    for (auto c : mInfo)
-    {
-        std::wcout << c.instanceName << "\n" << c.manufacturerName << "\n" << c.productCodeId << "\n";
-        std::wcout << c.serialNumberId << "\n" << c.userFriendlyName << "\n\n";
-    }
-
 
     POINT pos;
+    bool tracking = false;
     while (w.IsOpen())
     {
         w.Clear();
         w.ImGuiStartFrame();
 
+        if (KeyPressed() == GLFW_KEY_F9)
+            tracking = !tracking;
+
         if (GetCursorPos(&pos) == 0)
         {
             std::cerr << "GetCursorPos() error: " << GetLastError() << std::endl;
         }
-        else
+        else if(tracking)
         {
             i.Update(pos.x, pos.y, 0);
         }
         ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), m.Resolution(), pos, m.Name());
+        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking);
 
         w.ImGuiRender();
         w.PollEvents();
         w.Swap();
     }
 }
+
+
+/*
+    TODO:
+    - enable/disable tracking on keypress
+    - show if it's currently tracking
+*/
