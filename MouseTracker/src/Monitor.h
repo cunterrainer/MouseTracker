@@ -26,4 +26,7 @@ public:
     constexpr unsigned int Pixel() const { return m_Width * m_Height; }
     constexpr int Width() const { return m_Width; }
     constexpr int Height() const { return m_Height; }
+    const char* Name() const { return glfwGetMonitorName(glfwGetPrimaryMonitor()); }
 };
+
+void GetMonitors();

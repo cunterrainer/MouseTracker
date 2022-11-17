@@ -27,11 +27,27 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 }
 
 
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const char* mName)
+{
+    ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
+    ImGui::SetWindowPos({ 0, 0 });
+    ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
+
+    ImGui::LabelText("Resolution", "%ux%u", (unsigned int)mRes.x, (unsigned int)mRes.y);
+    ImGui::LabelText("Cursor position", "x=%ld y=%ld", pos.x, pos.y);
+    ImGui::LabelText("Monitor", "%s", mName);
+    
+    ImGui::End();
+}
+
+
 int main()
 {
     Window w;
     Monitor m;
     Image i(m.Resolution());
+
+    GetMonitors();
 
     POINT pos;
     while (w.IsOpen())
@@ -48,6 +64,7 @@ int main()
             i.Update(pos.x, pos.y, 0);
         }
         ImageWindow(w.GetSize(), i);
+        SettingsWindow(w.GetSize(), m.Resolution(), pos, m.Name());
 
         w.ImGuiRender();
         w.PollEvents();

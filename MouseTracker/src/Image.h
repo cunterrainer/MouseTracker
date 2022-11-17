@@ -69,7 +69,10 @@ public:
     }
 
 
-    GLuint GetGpuImage() const { return m_GpuImage; }
+    GLuint GetGpuImage() const 
+    { 
+        return m_GpuImage; 
+    }
 
 
     void Update(int x, int y, unsigned char c)
