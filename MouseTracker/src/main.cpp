@@ -7,32 +7,16 @@
 
 #include "Window.h"
 #include "Monitor.h"
-
-GLuint UploadTexture(const unsigned char* data, int width, int height)
-{
-    // Create a OpenGL texture identifier
-    GLuint image_texture;
-    glGenTextures(1, &image_texture);
-    glBindTexture(GL_TEXTURE_2D, image_texture);
-
-    // Setup filtering parameters for display
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, 1, width, height, 0, GL_RED, GL_UNSIGNED_BYTE, data);
-    return image_texture;
-}
+#include "Image.h"
 
 
 int main()
 {
     Window w;
     Monitor m;
-    
-    unsigned char* data = new unsigned char[m.Pixel()];
-    std::memset(data, 0, m.Pixel());
+    Image i(m.Resolution());
 
-    GLuint image = UploadTexture(data, m.Width(), m.Height());
+    GLuint image = i.UploadTexture();
 
     while (w.IsOpen())
     {
@@ -40,13 +24,11 @@ int main()
         w.ImGuiStartFrame();
 
         ImGui::Begin("Data");
-        ImGui::Image((void*)(intptr_t)image, m.Resolution());
+        ImGui::Image((void*)(intptr_t)image, i.Resolution());
         ImGui::End();
 
         w.ImGuiRender();
         w.WaitEvents();
         w.Swap();
     }
-
-    delete[] data;
 }
