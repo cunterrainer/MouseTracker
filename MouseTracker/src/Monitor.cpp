@@ -27,83 +27,59 @@ WCB WmiCloseBlock;
 
 std::vector<MonitorInfo> GetMonitors()
 {
-    std::vector<MonitorInfo> info;
-
-    HRESULT hr = E_FAIL;
-    LONG hWmiHandle;
-    PWmiMonitorID MonitorID;
+    // Load libraries
     HINSTANCE hDLL = LoadLibrary(L"Advapi32.dll");
     WmiOpenBlock = (WOB)GetProcAddress(hDLL, "WmiOpenBlock");
     WmiQueryAllData = (WQAD)GetProcAddress(hDLL, "WmiQueryAllDataW");
     WmiCloseBlock = (WCB)GetProcAddress(hDLL, "WmiCloseBlock");
-    if (WmiOpenBlock != NULL && WmiQueryAllData && WmiCloseBlock)
+    if (WmiOpenBlock == NULL || !WmiQueryAllData || !WmiCloseBlock)
+        return {};
+
+
+    LONG hWmiHandle = 0;
+    HRESULT hr = WmiOpenBlock((LPGUID)&WmiMonitorID_GUID, GENERIC_READ, &hWmiHandle);
+    if (hr != ERROR_SUCCESS)
+        return {};
+
+
+    ULONG nBufferSize = 0;
+    hr = WmiQueryAllData(hWmiHandle, &nBufferSize, 0);
+    if (hr != ERROR_INSUFFICIENT_BUFFER)
+        return {};
+
+
+    std::vector<MonitorInfo> info;
+    UCHAR* pAllDataBuffer = (UCHAR*)malloc(nBufferSize);
+    UCHAR* pAllDataBufferOriginal = pAllDataBuffer;
+    hr = WmiQueryAllData(hWmiHandle, &nBufferSize, pAllDataBuffer);
+    if (hr != ERROR_SUCCESS)
+        return {};
+
+
+    while (true)
     {
-        WCHAR pszDeviceId[256] = L"";
-        hr = WmiOpenBlock((LPGUID)&WmiMonitorID_GUID, GENERIC_READ, &hWmiHandle);
-        if (hr == ERROR_SUCCESS)
-        {
-            ULONG nBufferSize = 0;
-            UCHAR* pAllDataBuffer = 0;
-            PWNODE_ALL_DATA pWmiAllData;
-            hr = WmiQueryAllData(hWmiHandle, &nBufferSize, 0);
-            if (hr == ERROR_INSUFFICIENT_BUFFER)
-            {
-                pAllDataBuffer = (UCHAR*)malloc(nBufferSize);
-                UCHAR* ptr = pAllDataBuffer;
-                hr = WmiQueryAllData(hWmiHandle, &nBufferSize, pAllDataBuffer);
-                if (hr == ERROR_SUCCESS)
-                {
-                    while (1)
-                    {
-                        MonitorInfo mInfo;
+        MonitorInfo mInfo;
 
-                        pWmiAllData = (PWNODE_ALL_DATA)pAllDataBuffer;
-                        if (pWmiAllData->WnodeHeader.Flags & WNODE_FLAG_FIXED_INSTANCE_SIZE)
-                            MonitorID = (PWmiMonitorID)&pAllDataBuffer[pWmiAllData->DataBlockOffset];
-                        else
-                            MonitorID = (PWmiMonitorID)&pAllDataBuffer[pWmiAllData->OffsetInstanceDataAndLength[0].OffsetInstanceData];
+        PWmiMonitorID MonitorID;
+        PWNODE_ALL_DATA pWmiAllData = (PWNODE_ALL_DATA)pAllDataBuffer;
+        if (pWmiAllData->WnodeHeader.Flags & WNODE_FLAG_FIXED_INSTANCE_SIZE)
+            MonitorID = (PWmiMonitorID)&pAllDataBuffer[pWmiAllData->DataBlockOffset];
+        else
+            MonitorID = (PWmiMonitorID)&pAllDataBuffer[pWmiAllData->OffsetInstanceDataAndLength[0].OffsetInstanceData];
 
-                        ULONG nOffset = 0;
-                        WCHAR* pwsInstanceName = 0;
-                        nOffset = (ULONG)pAllDataBuffer[pWmiAllData->OffsetInstanceNameOffsets];
-                        pwsInstanceName = (WCHAR*)OFFSET_TO_PTR(pWmiAllData, nOffset + sizeof(USHORT));
-                        WCHAR wsText[255] = L"";
-                        swprintf(wsText, 255, L"Instance Name = %s\r\n", pwsInstanceName);
-                        OutputDebugString(wsText);
-                        mInfo.instanceName = wsText;
+        ULONG nOffset = (ULONG)pAllDataBuffer[pWmiAllData->OffsetInstanceNameOffsets];
+        mInfo.instanceName     = (WCHAR*)OFFSET_TO_PTR(pWmiAllData, nOffset + sizeof(USHORT));
+        mInfo.userFriendlyName = (WCHAR*)MonitorID->UserFriendlyName;
+        mInfo.manufacturerName = (WCHAR*)MonitorID->ManufacturerName;
+        mInfo.productCodeId    = (WCHAR*)MonitorID->ProductCodeID;
+        mInfo.serialNumberId   = (WCHAR*)MonitorID->SerialNumberID;
+        info.push_back(mInfo);
 
-                        WCHAR* pwsUserFriendlyName;
-                        pwsUserFriendlyName = (WCHAR*)MonitorID->UserFriendlyName;
-                        swprintf(wsText, 255, L"User Friendly Name = %s\r\n", pwsUserFriendlyName);
-                        OutputDebugString(wsText);
-                        std::wcout << wsText << std::endl;
-
-                        WCHAR* pwsManufacturerName;
-                        pwsManufacturerName = (WCHAR*)MonitorID->ManufacturerName;
-                        swprintf(wsText, 255, L"Manufacturer Name = %s\r\n", pwsManufacturerName);
-                        OutputDebugString(wsText);
-                        std::wcout << wsText << std::endl;
-
-                        WCHAR* pwsProductCodeID;
-                        pwsProductCodeID = (WCHAR*)MonitorID->ProductCodeID;
-                        swprintf(wsText, 255, L"Product Code ID = %s\r\n", pwsProductCodeID);
-                        OutputDebugString(wsText);
-                        std::wcout << wsText << std::endl;
-
-                        WCHAR* pwsSerialNumberID;
-                        pwsSerialNumberID = (WCHAR*)MonitorID->SerialNumberID;
-                        swprintf(wsText, 255, L"Serial Number ID = %s\r\n", pwsSerialNumberID);
-                        OutputDebugString(wsText);
-
-                        if (!pWmiAllData->WnodeHeader.Linkage)
-                            break;
-                        pAllDataBuffer += pWmiAllData->WnodeHeader.Linkage;
-                        std::wcout << wsText << std::endl;
-                    }
-                    free(ptr);
-                }
-            }
-            WmiCloseBlock(hWmiHandle);
-        }
+        if (!pWmiAllData->WnodeHeader.Linkage)
+            break;
+        pAllDataBuffer += pWmiAllData->WnodeHeader.Linkage;
     }
+    free(pAllDataBufferOriginal);
+    WmiCloseBlock(hWmiHandle);
+    return info;
 }

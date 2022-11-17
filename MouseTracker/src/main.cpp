@@ -47,7 +47,13 @@ int main()
     Monitor m;
     Image i(m.Resolution());
 
-    GetMonitors();
+    std::vector<MonitorInfo> mInfo = GetMonitors();
+    for (auto c : mInfo)
+    {
+        std::wcout << c.instanceName << "\n" << c.manufacturerName << "\n" << c.productCodeId << "\n";
+        std::wcout << c.serialNumberId << "\n" << c.userFriendlyName << "\n\n";
+    }
+
 
     POINT pos;
     while (w.IsOpen())
