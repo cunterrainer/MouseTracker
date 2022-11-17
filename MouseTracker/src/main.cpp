@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cstring>
+#include <Windows.h>
 
 #include "ImGui/imgui.h"
 
@@ -39,10 +40,23 @@ int main()
         w.Clear();
         w.ImGuiStartFrame();
 
+
+        POINT pos;
+        if (GetCursorPos(&pos) == 0)
+        {
+            std::cerr << "GetCursorPos() error: " << GetLastError() << std::endl;
+        }
+        else
+        {
+            //i.SetPixel(pos.x, pos.y, 0);
+            image = i.Update(image, pos.x, pos.y, 0);
+            std::cout << pos.x << " " << pos.y << std::endl;
+        }
+
         ImageWindow(w.GetSize(), image, i);
 
         w.ImGuiRender();
-        w.WaitEvents();
+        w.PollEvents();
         w.Swap();
     }
 }
