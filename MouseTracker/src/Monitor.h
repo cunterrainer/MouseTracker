@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include <string>
+#include <vector>
 
 #include "GLFW/glfw3.h"
 #include "ImGui/imgui.h"
@@ -29,4 +31,13 @@ public:
     const char* Name() const { return glfwGetMonitorName(glfwGetPrimaryMonitor()); }
 };
 
-void GetMonitors();
+struct MonitorInfo
+{
+    std::wstring instanceName;
+    std::wstring userFriendlyName;
+    std::wstring manufacturerName;
+    std::wstring productCodeId;
+    std::wstring serialNumberId;
+};
+
+std::vector<MonitorInfo> GetMonitors();

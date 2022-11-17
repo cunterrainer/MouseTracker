@@ -1,10 +1,10 @@
-#define _CRT_NON_CONFORMING_SWPRINTFS
-#define _CRT_SECURE_NO_WARNINGS
 #include <Windows.h>
 #include <tchar.h>
 #include <initguid.h>
 #include <wmistr.h>
-#include <iostream>
+
+#include "Monitor.h"
+
 DEFINE_GUID(WmiMonitorID_GUID, 0x671a8285, 0x4edb, 0x4cae, 0x99, 0xfe, 0x69, 0xa1, 0x5c, 0x48, 0xc0, 0xbc);
 typedef struct WmiMonitorID {
     USHORT ProductCodeID[16];
@@ -25,8 +25,10 @@ typedef HRESULT(WINAPI* WCB) (IN LONG);
 WCB WmiCloseBlock;
 
 
-void GetMonitors()
+std::vector<MonitorInfo> GetMonitors()
 {
+    std::vector<MonitorInfo> info;
+
     HRESULT hr = E_FAIL;
     LONG hWmiHandle;
     PWmiMonitorID MonitorID;
@@ -47,11 +49,14 @@ void GetMonitors()
             if (hr == ERROR_INSUFFICIENT_BUFFER)
             {
                 pAllDataBuffer = (UCHAR*)malloc(nBufferSize);
+                UCHAR* ptr = pAllDataBuffer;
                 hr = WmiQueryAllData(hWmiHandle, &nBufferSize, pAllDataBuffer);
                 if (hr == ERROR_SUCCESS)
                 {
                     while (1)
                     {
+                        MonitorInfo mInfo;
+
                         pWmiAllData = (PWNODE_ALL_DATA)pAllDataBuffer;
                         if (pWmiAllData->WnodeHeader.Flags & WNODE_FLAG_FIXED_INSTANCE_SIZE)
                             MonitorID = (PWmiMonitorID)&pAllDataBuffer[pWmiAllData->DataBlockOffset];
@@ -65,7 +70,7 @@ void GetMonitors()
                         WCHAR wsText[255] = L"";
                         swprintf(wsText, 255, L"Instance Name = %s\r\n", pwsInstanceName);
                         OutputDebugString(wsText);
-                        std::wcout << wsText << std::endl;
+                        mInfo.instanceName = wsText;
 
                         WCHAR* pwsUserFriendlyName;
                         pwsUserFriendlyName = (WCHAR*)MonitorID->UserFriendlyName;
@@ -95,7 +100,7 @@ void GetMonitors()
                         pAllDataBuffer += pWmiAllData->WnodeHeader.Linkage;
                         std::wcout << wsText << std::endl;
                     }
-                    //free(pAllDataBuffer);
+                    free(ptr);
                 }
             }
             WmiCloseBlock(hWmiHandle);
