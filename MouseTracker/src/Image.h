@@ -43,15 +43,32 @@ private:
     }
 
 
-    bool SetPixel(int x, int y, unsigned char c)
+    bool SetPixel(int x, int y, bool bigPixelMode)
     {
-        const int index = GetIndex(x, y);
-        if (index != -1)
+        auto SetDataAtIndex = [this](int x, int y)
         {
-            m_Data[index] = c;
-            return true;
+            const int index = GetIndex(x, y);
+            if (index != -1)
+            {
+                m_Data[index] = 0;
+                return true;
+            }
+            return false;
+        };
+
+        const bool inRange = SetDataAtIndex(x, y);
+        if (bigPixelMode && inRange)
+        {
+            SetDataAtIndex(x+1, y);
+            SetDataAtIndex(x-1, y);
+            SetDataAtIndex(x, y+1);
+            SetDataAtIndex(x, y-1);
+            SetDataAtIndex(x+1, y+1);
+            SetDataAtIndex(x+1, y-1);
+            SetDataAtIndex(x-1, y+1);
+            SetDataAtIndex(x-1, y-1);
         }
-        return false;
+        return inRange;
     }
 
 
@@ -93,9 +110,9 @@ public:
     }
 
 
-    inline void Update(int x, int y, unsigned char c)
+    inline void Update(int x, int y, bool bpm)
     {
-        if (SetPixel(x, y, c))
+        if (SetPixel(x, y, bpm))
             UpdateGpu();
     }
 

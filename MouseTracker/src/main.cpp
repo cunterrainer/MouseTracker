@@ -91,7 +91,7 @@ inline void LoadImg(Image& img)
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, Image& img)
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, bool& bigPixelMode, Image& img)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -101,6 +101,9 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mIn
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", pos.x, pos.y);
     ImGui::LabelText("Monitor", "%ls %ls", mInfo.manufacturerName.c_str(), mInfo.userFriendlyName.c_str());
     
+    if (ImGui::RadioButton("Big pixel mode [F8]", bigPixelMode))
+        bigPixelMode = !bigPixelMode;
+
     if(tracking)
         ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 230, 0, 255));
     else
@@ -133,12 +136,15 @@ int main()
 
     POINT pos;
     bool tracking = false;
+    bool bigPixelMode = false;
     while (w.IsOpen())
     {
         w.Clear();
         w.ImGuiStartFrame();
         if (KeyPressed(VK_F9))
             tracking = !tracking;
+        else if (KeyPressed(VK_F8))
+            bigPixelMode = !bigPixelMode;
 
         if (GetCursorPos(&pos) == 0)
         {
@@ -146,10 +152,10 @@ int main()
         }
         else if(tracking)
         {
-            i.Update(pos.x, pos.y, 0);
+            i.Update(pos.x, pos.y, bigPixelMode);
         }
         ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking, i);
+        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking, bigPixelMode, i);
 
         w.ImGuiRender();
         w.PollEvents();
