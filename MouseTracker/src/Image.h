@@ -68,7 +68,7 @@ private:
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
     }
 public:
-    Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
+    inline Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
     {
         const size_t pixel = (size_t)(m_Height*m_Width);
         m_Data = new unsigned char[pixel];
@@ -76,24 +76,24 @@ public:
         m_GpuImage = GenerateTexture();
     }
 
-    ~Image()
+    inline ~Image()
     {
         DeleteTexture();
     }
 
-    ImVec2 Resolution() const 
+    inline ImVec2 Resolution() const
     { 
         return { static_cast<float>(m_Width), static_cast<float>(m_Height) }; 
     }
 
 
-    GLuint GetGpuImage() const 
+    inline GLuint GetGpuImage() const
     { 
         return m_GpuImage; 
     }
 
 
-    void Update(int x, int y, unsigned char c)
+    inline void Update(int x, int y, unsigned char c)
     {
         if (SetPixel(x, y, c))
             UpdateGpu();
@@ -129,7 +129,7 @@ public:
     }
 
 
-    void Reset()
+    inline void Reset()
     {
         const size_t pixel = (size_t)(m_Height * m_Width);
         std::memset(m_Data, 255, pixel);

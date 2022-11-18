@@ -67,7 +67,7 @@ std::optional<std::string> GetImagePath()
 }
 
 
-void SaveImage(const Image& img)
+inline void SaveImage(const Image& img)
 {
     const std::optional<std::filesystem::path> path = GetSavePath();
     if (!path.has_value())
@@ -76,7 +76,7 @@ void SaveImage(const Image& img)
 }
 
 
-void LoadImg(Image& img)
+inline void LoadImg(Image& img)
 {
     std::optional<std::string> path = GetImagePath();
     if (!path.has_value())
