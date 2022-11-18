@@ -60,6 +60,13 @@ private:
         delete[] m_Data;
         glDeleteTextures(1, &m_GpuImage);
     }
+
+
+    inline void UpdateGpu() const
+    {
+        glBindTexture(GL_TEXTURE_2D, m_GpuImage);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
+    }
 public:
     Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
     {
@@ -89,10 +96,7 @@ public:
     void Update(int x, int y, unsigned char c)
     {
         if (SetPixel(x, y, c))
-        {
-            glBindTexture(GL_TEXTURE_2D, m_GpuImage);
-            glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
-        }
+            UpdateGpu();
     }
 
 
@@ -122,5 +126,13 @@ public:
         DeleteTexture();
         m_Data = data;
         m_GpuImage = GenerateTexture();
+    }
+
+
+    void Reset()
+    {
+        const size_t pixel = (size_t)(m_Height * m_Width);
+        std::memset(m_Data, 255, pixel);
+        UpdateGpu();
     }
 };

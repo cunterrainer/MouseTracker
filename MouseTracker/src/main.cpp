@@ -108,6 +108,11 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mIn
     ImGui::SameLine(ImGui::GetItemRectSize().x + 20);
     if (ImGui::Button("Load image"))
         LoadImg(img);
+
+    ImGui::Button("Reset image(Double click)");
+    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+        img.Reset();
+
     ImGui::End();
 }
 
