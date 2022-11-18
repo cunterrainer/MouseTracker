@@ -11,13 +11,12 @@ class Image
 private:
     int m_Width;
     int m_Height;
-    int m_Pixel;
     unsigned char* m_Data;
     GLuint m_GpuImage = 0;
 private:
     constexpr int GetIndex(int x, int y) const
     {
-        if (x < 0 || y < 0 || x >(m_Width - 1) || y >(m_Height - 1))
+        if (x < 0 || y < 0 || x > (m_Width - 1) || y > (m_Height - 1))
             return -1;
         return m_Width * y + x;
     }
@@ -50,10 +49,11 @@ private:
         return false;
     }
 public:
-    Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y)), m_Pixel(m_Width*m_Height)
+    Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
     {
-        m_Data = new unsigned char[m_Pixel];
-        std::memset(m_Data, 255, m_Pixel);
+        const size_t pixel = (size_t)(m_Height*m_Width);
+        m_Data = new unsigned char[pixel];
+        std::memset(m_Data, 255, pixel);
         m_GpuImage = GenerateTexture();
     }
 

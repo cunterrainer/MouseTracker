@@ -27,7 +27,8 @@ project "MouseTracker"
         "nativefiledialog",
         "ImGui",
         "gdi32",
-        "opengl32"
+        "opengl32",
+        "shell32"
     }
 
     -- gcc* clang* msc*
@@ -46,15 +47,12 @@ project "MouseTracker"
             "disabled-optimization",
             "format=2",
             "init-self",
-            "missing-declarations",
             "missing-include-dirs",
-            "old-style-cast",
             "overloaded-virtual",
             "redundant-decls",
             "shadow",
             "sign-conversion",
             "sign-promo",
-            "strict-overflow=5",
             "switch-default",
             "undef",
             "uninitialized",
@@ -86,6 +84,7 @@ project "MouseTracker"
             "implicit-fallthrough=3",
             "trampolines"
         }
+        disablewarnings "cast-function-type"
         defines "GCC"
 
     filter "toolset:clang*"
@@ -96,6 +95,7 @@ project "MouseTracker"
             "long-long",
             "implicit-fallthrough", 
         }
+        disablewarnings "cast-align"
         defines "CLANG"
     filter {}
 

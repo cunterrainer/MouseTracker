@@ -28,7 +28,7 @@ WCB WmiCloseBlock;
 std::vector<MonitorInfo> GetMonitors()
 {
     // Load libraries
-    HINSTANCE hDLL = LoadLibrary(L"Advapi32.dll");
+    HINSTANCE hDLL = LoadLibraryW(L"Advapi32.dll");
     WmiOpenBlock = (WOB)GetProcAddress(hDLL, "WmiOpenBlock");
     WmiQueryAllData = (WQAD)GetProcAddress(hDLL, "WmiQueryAllDataW");
     WmiCloseBlock = (WCB)GetProcAddress(hDLL, "WmiCloseBlock");
@@ -37,7 +37,7 @@ std::vector<MonitorInfo> GetMonitors()
 
 
     LONG hWmiHandle = 0;
-    HRESULT hr = WmiOpenBlock((LPGUID)&WmiMonitorID_GUID, GENERIC_READ, &hWmiHandle);
+    HRESULT hr = WmiOpenBlock(const_cast<LPGUID>(&WmiMonitorID_GUID), GENERIC_READ, &hWmiHandle);
     if (hr != ERROR_SUCCESS)
         return {};
 

@@ -9,8 +9,8 @@
 class Monitor
 {
 private:
-    int m_Width = 0;
-    int m_Height = 0;
+    unsigned int m_Width = 0;
+    unsigned int m_Height = 0;
 public:
     Monitor()
     {
@@ -20,15 +20,14 @@ public:
             std::cerr << "Failed to retreive resolution\n";
             return;
         }
-        m_Width = mode->width;
-        m_Height = mode->height;
+        m_Width = static_cast<unsigned int>(mode->width);
+        m_Height = static_cast<unsigned int>(mode->height);
     }
 
     constexpr ImVec2 Resolution() const { return { static_cast<float>(m_Width), static_cast<float>(m_Height) }; }
     constexpr unsigned int Pixel() const { return m_Width * m_Height; }
-    constexpr int Width() const { return m_Width; }
-    constexpr int Height() const { return m_Height; }
-    const char* Name() const { return glfwGetMonitorName(glfwGetPrimaryMonitor()); }
+    constexpr unsigned int Width() const { return m_Width; }
+    constexpr unsigned int Height() const { return m_Height; }
 };
 
 struct MonitorInfo

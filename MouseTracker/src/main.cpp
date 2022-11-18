@@ -8,7 +8,6 @@
 #include "Monitor.h"
 #include "Image.h"
 
-
 void ImageWindow(ImVec2 wSize, const Image& image)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -82,10 +81,3 @@ int main()
         w.Swap();
     }
 }
-
-
-/*
-    TODO:
-    - enable/disable tracking on keypress
-    - show if it's currently tracking
-*/
