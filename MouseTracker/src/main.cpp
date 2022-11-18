@@ -48,6 +48,25 @@ std::optional<std::filesystem::path> GetSavePath()
 }
 
 
+std::optional<std::string> GetImagePath()
+{
+    nfdchar_t* outPath = NULL;
+    nfdresult_t result = NFD_OpenDialog("", NULL, &outPath);
+    if (result == NFD_OKAY)
+    {
+        const std::string filePath = outPath;
+        free(outPath);
+        return { filePath };
+    }
+    // error opening the file
+    else if (result != NFD_CANCEL)
+    {
+        std::cerr << "Failed to open file [" << outPath << "]\n";
+    }
+    return std::nullopt;
+}
+
+
 void SaveImage(const Image& img)
 {
     const std::optional<std::filesystem::path> path = GetSavePath();
@@ -57,7 +76,16 @@ void SaveImage(const Image& img)
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, const Image& img)
+void LoadImg(Image& img)
+{
+    std::optional<std::string> path = GetImagePath();
+    if (!path.has_value())
+        return;
+    img.LoadFromFile(path.value());
+}
+
+
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, Image& img)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -78,8 +106,8 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mIn
     if (ImGui::Button("Save image"))
         SaveImage(img);
     ImGui::SameLine(ImGui::GetItemRectSize().x + 20);
-    ImGui::Button("Load image");
-
+    if (ImGui::Button("Load image"))
+        LoadImg(img);
     ImGui::End();
 }
 

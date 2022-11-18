@@ -53,6 +53,13 @@ private:
         }
         return false;
     }
+
+
+    inline void DeleteTexture() const
+    {
+        delete[] m_Data;
+        glDeleteTextures(1, &m_GpuImage);
+    }
 public:
     Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
     {
@@ -64,8 +71,7 @@ public:
 
     ~Image()
     {
-        delete[] m_Data;
-        glDeleteTextures(1, &m_GpuImage);
+        DeleteTexture();
     }
 
     ImVec2 Resolution() const 
@@ -100,5 +106,21 @@ public:
 
         if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, 1, m_Data, m_Width) == 0)
             std::cerr << "Failed to write image [" << path << "]\n";
+    }
+
+
+    void LoadFromFile(const std::string_view& path)
+    {
+        int cmp;
+        unsigned char* data = stbi_load(path.data(), &m_Width, &m_Height, &cmp, 1);
+        if (data == NULL)
+        {
+            std::cerr << "Failed to load image from file\n";
+            return;
+        }
+
+        DeleteTexture();
+        m_Data = data;
+        m_GpuImage = GenerateTexture();
     }
 };
