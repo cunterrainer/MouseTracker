@@ -44,6 +44,10 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mIn
         tracking = !tracking;
     ImGui::PopStyleColor();
 
+    ImGui::Button("Save image");
+    ImGui::SameLine(ImGui::GetItemRectSize().x + 20);
+    ImGui::Button("Load image");
+
     ImGui::End();
 }
 

@@ -84,8 +84,8 @@ void Window::ImGuiInit(const char* iniFileName) const
     io.Fonts->AddFontFromMemoryCompressedTTF(sg_ArialCompressedData, sg_ArialCompressedSize, 19);
     io.IniFilename = iniFileName;
 
-    ImGuiStyle& style = ImGui::GetStyle();
-    style.FrameRounding = 5.f;
+    //ImGuiStyle& style = ImGui::GetStyle();
+    //style.FrameRounding = 5.f;
     //style.WindowRounding = 5.f;
 
     ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
