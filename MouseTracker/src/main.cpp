@@ -12,6 +12,12 @@
 #include "Monitor.h"
 #include "Image.h"
 
+// not using glfw since it doesn't record key presses if window isn't focused
+inline bool KeyPressed(int key)
+{
+    return GetAsyncKeyState(key) & 0x01;
+}
+
 void ImageWindow(ImVec2 wSize, const Image& image)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
@@ -131,7 +137,7 @@ int main()
     {
         w.Clear();
         w.ImGuiStartFrame();
-        if (KeyPressed() == GLFW_KEY_F9)
+        if (KeyPressed(VK_F9))
             tracking = !tracking;
 
         if (GetCursorPos(&pos) == 0)

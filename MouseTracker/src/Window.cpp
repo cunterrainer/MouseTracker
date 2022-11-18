@@ -7,22 +7,6 @@
 #include "Window.h"
 #include "Arial.h"
 
-
-int g_LastPressedKey = 0;
-void WindowKeyCallback(GLFWwindow*, int key, int, int action, int)
-{
-    if(action == GLFW_PRESS)
-        g_LastPressedKey = key;
-}
-
-int KeyPressed()
-{
-    const int key = g_LastPressedKey;
-    g_LastPressedKey = 0;
-    return key;
-}
-
-
 //public
 Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, GLFWwindow* share)
 {
@@ -45,9 +29,6 @@ Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, G
     // center the window
     const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     glfwSetWindowPos(m_Window, (mode->width - width) / 2, (mode->height - height) / 2);
-
-    // callbacks
-    glfwSetKeyCallback(m_Window, WindowKeyCallback);
 
     glfwMakeContextCurrent(m_Window);
     glClearColor(0.27f, 0.27f, 0.27f, 1.0f);
