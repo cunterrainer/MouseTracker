@@ -26,7 +26,7 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool tracking)
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -37,10 +37,11 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mIn
     ImGui::LabelText("Monitor", "%ls %ls", mInfo.manufacturerName.c_str(), mInfo.userFriendlyName.c_str());
     
     if(tracking)
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 128, 0, 255));
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 230, 0, 255));
     else
-        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(128, 0, 0, 255));
-    ImGui::LabelText("##Tracking", "Tracking [F9]");
+        ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(230, 0, 0, 255));
+    if (ImGui::RadioButton("Tracking [F9]", tracking))
+        tracking = !tracking;
     ImGui::PopStyleColor();
 
     ImGui::End();
@@ -52,7 +53,7 @@ int main()
     Window w;
     Monitor m;
     Image i(m.Resolution());
-
+    
     std::vector<MonitorInfo> mInfo = GetMonitors();
 
     POINT pos;
@@ -61,7 +62,6 @@ int main()
     {
         w.Clear();
         w.ImGuiStartFrame();
-
         if (KeyPressed() == GLFW_KEY_F9)
             tracking = !tracking;
 

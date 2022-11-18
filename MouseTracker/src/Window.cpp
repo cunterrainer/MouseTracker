@@ -50,7 +50,6 @@ Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, G
     glfwSetKeyCallback(m_Window, WindowKeyCallback);
 
     glfwMakeContextCurrent(m_Window);
-    glfwSwapInterval(1); // Enable vsync
     glClearColor(0.27f, 0.27f, 0.27f, 1.0f);
     ImGuiInit();
 }
