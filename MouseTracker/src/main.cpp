@@ -136,7 +136,8 @@ int main()
     
     std::vector<MonitorInfo> mInfo = GetMonitors();
 
-    POINT pos;
+    POINT pos{ 0,0 };
+    POINT prevPos{ 1,1 };
     bool tracking = false;
     bool bigPixelMode = false;
     while (w.IsOpen())
@@ -148,11 +149,12 @@ int main()
         else if (KeyPressed(VK_F8))
             bigPixelMode = !bigPixelMode;
 
+        prevPos = pos;
         if (GetCursorPos(&pos) == 0)
         {
             Err << "GetCursorPos() error: " << GetLastError() << std::endl;
         }
-        else if(tracking)
+        else if ((pos.x != prevPos.x || pos.y != prevPos.y) && tracking)
         {
             i.Update(pos.x, pos.y, bigPixelMode);
         }
