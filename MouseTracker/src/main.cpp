@@ -45,12 +45,13 @@ std::optional<std::filesystem::path> GetSavePath()
     {
         const std::filesystem::path path = savePath;
         free(savePath);
+        Log << "GetSavePath() path: [" << path << ']' << std::endl;
         return { path };
     }
-    else if (result != NFD_CANCEL)
-    {
-        std::cout << "Failed to open file [" << savePath << "]\n";
-    }
+    else if (result == NFD_CANCEL)
+        Log << "GetSavePath() user pressed cancel" << std::endl;
+    else
+        Err << "GetSavePath() failed to open file [" << savePath << "]" << std::endl;
     return std::nullopt;
 }
 
@@ -63,13 +64,13 @@ std::optional<std::string> GetImagePath()
     {
         const std::string filePath = outPath;
         free(outPath);
+        Log << "GetImagePath() path: [" << filePath << ']' << std::endl;
         return { filePath };
     }
-    // error opening the file
-    else if (result != NFD_CANCEL)
-    {
-        std::cout << "Failed to open file [" << outPath << "]\n";
-    }
+    else if (result == NFD_CANCEL)
+        Log << "GetImagePath() user pressed cancel" << std::endl;
+    else // error opening the file
+        Err << "GetImagePath() failed to open file [" << outPath << "]" << std::endl;
     return std::nullopt;
 }
 
@@ -149,7 +150,7 @@ int main()
 
         if (GetCursorPos(&pos) == 0)
         {
-            std::cout << "GetCursorPos() error: " << GetLastError() << std::endl;
+            Err << "GetCursorPos() error: " << GetLastError() << std::endl;
         }
         else if(tracking)
         {

@@ -29,5 +29,5 @@ public:
         return *this;
     }
 };
-static inline const Logger Log("[LOG] ");
-static inline const Logger Err("[ERR] ");
+static inline const Logger Log("[INFO] ");
+static inline const Logger Err("[ERROR] ");

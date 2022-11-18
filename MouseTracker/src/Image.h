@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cstring>
 #include <string>
+#include <new>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -10,6 +11,8 @@
 #include "ImGui/imgui.h"
 #include "stb/stb_image.h"
 #include "stb/stb_image_write.h"
+
+#include "Log.h"
 
 class Image
 {
@@ -39,6 +42,7 @@ private:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
         glTexImage2D(GL_TEXTURE_2D, 0, 1, m_Width, m_Height, 0, GL_RED, GL_UNSIGNED_BYTE, m_Data);
+        Log << "Generated opengl texture w: " << m_Width << " h: " << m_Height << " texture: " << img << std::endl;
         return img;
     }
 
@@ -76,6 +80,7 @@ private:
     {
         delete[] m_Data;
         glDeleteTextures(1, &m_GpuImage);
+        Log << "Deleted image texture: " << m_GpuImage << std::endl;
     }
 
 
@@ -88,7 +93,12 @@ public:
     inline Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
     {
         const size_t pixel = (size_t)(m_Height*m_Width);
-        m_Data = new unsigned char[pixel];
+        m_Data = new (std::nothrow) unsigned char[pixel];
+        if (m_Data == nullptr)
+        {
+            Err << "{Image} Failed to allocate memory for internal array" << std::endl;
+            return;
+        }
         std::memset(m_Data, 255, pixel);
         m_GpuImage = GenerateTexture();
     }
@@ -126,7 +136,11 @@ public:
             pathStr += ".png";
 
         if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, 1, m_Data, m_Width) == 0)
-            std::cout << "Failed to write image [" << path << "]\n";
+        {
+            Err << "Failed to write image w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
+            return;
+        }
+        Log << "Successfully wrote image w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
     }
 
 
@@ -136,9 +150,10 @@ public:
         unsigned char* data = stbi_load(path.data(), &m_Width, &m_Height, &cmp, 1);
         if (data == NULL)
         {
-            std::cout << "Failed to load image from file\n";
+            Err << "Failed to load image from file [" << path << "]" << std::endl;
             return;
         }
+        Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
 
         DeleteTexture();
         m_Data = data;
@@ -151,5 +166,6 @@ public:
         const size_t pixel = (size_t)(m_Height * m_Width);
         std::memset(m_Data, 255, pixel);
         UpdateGpu();
+        Log << "{Image} Reset image w: " << m_Width << " h: " << m_Height << std::endl;
     }
 };

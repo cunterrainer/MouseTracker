@@ -5,6 +5,7 @@
 #include <wmistr.h>
 
 #include "Monitor.h"
+#include "Log.h"
 
 DEFINE_GUID(WmiMonitorID_GUID, 0x671a8285, 0x4edb, 0x4cae, 0x99, 0xfe, 0x69, 0xa1, 0x5c, 0x48, 0xc0, 0xbc);
 typedef struct WmiMonitorID {
@@ -34,14 +35,17 @@ std::vector<MonitorInfo> GetMonitors()
     WmiQueryAllData = (WQAD)GetProcAddress(hDLL, "WmiQueryAllDataW");
     WmiCloseBlock = (WCB)GetProcAddress(hDLL, "WmiCloseBlock");
     if (WmiOpenBlock == NULL || !WmiQueryAllData || !WmiCloseBlock)
+    {
+        Err << "Failed to load either WmiOpenBlock or WmiQueryAllData or WmiCloseBlock" << std::endl;
         return {};
+    }
 
 
     LONG hWmiHandle = 0;
     HRESULT hr = WmiOpenBlock(const_cast<LPGUID>(&WmiMonitorID_GUID), GENERIC_READ, &hWmiHandle);
     if (hr != ERROR_SUCCESS)
     {
-        std::cout << "WmiOpenBlock() failed: " << GetLastError() << std::endl;
+        Err << "WmiOpenBlock() failed: " << GetLastError() << std::endl;
         return {};
     }
 
@@ -50,22 +54,28 @@ std::vector<MonitorInfo> GetMonitors()
     hr = WmiQueryAllData(hWmiHandle, &nBufferSize, 0);
     if (hr != ERROR_INSUFFICIENT_BUFFER)
     {
-        std::cout << "1) WmiQueryAllData() failed: " << GetLastError() << std::endl;
+        Err << "1) WmiQueryAllData() failed: " << GetLastError() << std::endl;
+        return {};
+    }
+
+
+    UCHAR* pAllDataBuffer = (UCHAR*)malloc(nBufferSize);
+    if (pAllDataBuffer == NULL)
+    {
+        Err << "{Monitor} Failed to allocate memory for WmiQueryAllData buffer" << std::endl;
+        return {};
+    }
+
+    UCHAR* pAllDataBufferOriginal = pAllDataBuffer;
+    hr = WmiQueryAllData(hWmiHandle, &nBufferSize, pAllDataBuffer);
+    if (hr != ERROR_SUCCESS)
+    {
+        Err << "2) WmiQueryAllData() failed: " << GetLastError() << std::endl;
         return {};
     }
 
 
     std::vector<MonitorInfo> info;
-    UCHAR* pAllDataBuffer = (UCHAR*)malloc(nBufferSize);
-    UCHAR* pAllDataBufferOriginal = pAllDataBuffer;
-    hr = WmiQueryAllData(hWmiHandle, &nBufferSize, pAllDataBuffer);
-    if (hr != ERROR_SUCCESS)
-    {
-        std::cout << "2) WmiQueryAllData() failed: " << GetLastError() << std::endl;
-        return {};
-    }
-
-
     while (true)
     {
         MonitorInfo mInfo;
