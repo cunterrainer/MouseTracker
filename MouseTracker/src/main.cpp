@@ -50,7 +50,6 @@ std::optional<std::filesystem::path> GetSavePath()
     {
         std::cout << "Failed to open file [" << savePath << "]\n";
     }
-    std::cout << "Canceled\n";
     return std::nullopt;
 }
 

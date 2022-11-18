@@ -1,7 +1,6 @@
 project "MouseTracker"
     language "C++"
     cppdialect "C++17"
-
     defines "_CRT_SECURE_NO_WARNINGS"
 
     files {
@@ -31,7 +30,9 @@ project "MouseTracker"
         "ImGui",
         "gdi32",
         "opengl32",
-        "shell32"
+        "shell32",
+        "ole32",
+        "uuid"
     }
 
     -- gcc* clang* msc*

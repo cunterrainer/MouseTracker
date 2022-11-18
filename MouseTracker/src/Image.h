@@ -45,9 +45,9 @@ private:
 
     bool SetPixel(int x, int y, bool bigPixelMode)
     {
-        auto SetDataAtIndex = [this](int x, int y)
+        auto SetDataAtIndex = [this](int a, int b)
         {
-            const int index = GetIndex(x, y);
+            const int index = GetIndex(a, b);
             if (index != -1)
             {
                 m_Data[index] = 0;
