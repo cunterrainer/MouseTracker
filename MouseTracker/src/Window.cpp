@@ -10,11 +10,11 @@
 //public
 Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, GLFWwindow* share)
 {
-    glfwSetErrorCallback([](int error, const char* description){ std::cerr << "Glfw Error " << error << ": " << description << '\n'; });
+    glfwSetErrorCallback([](int error, const char* description){ std::cout << "Glfw Error " << error << ": " << description << '\n'; });
     
     if (!glfwInit())
     {
-        std::cerr << "[ERROR] Glfw Init failed\n";
+        std::cout << "[ERROR] Glfw Init failed\n";
         return;
     }
 
@@ -22,7 +22,7 @@ Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, G
     m_Window = glfwCreateWindow(width, height, title, monitor, share);
     if (m_Window == NULL)
     {
-        std::cerr << "[ERROR] glfwCreateWindow failed\n";
+        std::cout << "[ERROR] glfwCreateWindow failed\n";
         return;
     }
         

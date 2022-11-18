@@ -1,3 +1,4 @@
+#include <iostream>
 #include <Windows.h>
 #include <tchar.h>
 #include <initguid.h>
@@ -39,13 +40,19 @@ std::vector<MonitorInfo> GetMonitors()
     LONG hWmiHandle = 0;
     HRESULT hr = WmiOpenBlock(const_cast<LPGUID>(&WmiMonitorID_GUID), GENERIC_READ, &hWmiHandle);
     if (hr != ERROR_SUCCESS)
+    {
+        std::cout << "WmiOpenBlock() failed: " << GetLastError() << std::endl;
         return {};
+    }
 
 
     ULONG nBufferSize = 0;
     hr = WmiQueryAllData(hWmiHandle, &nBufferSize, 0);
     if (hr != ERROR_INSUFFICIENT_BUFFER)
+    {
+        std::cout << "1) WmiQueryAllData() failed: " << GetLastError() << std::endl;
         return {};
+    }
 
 
     std::vector<MonitorInfo> info;
@@ -53,7 +60,10 @@ std::vector<MonitorInfo> GetMonitors()
     UCHAR* pAllDataBufferOriginal = pAllDataBuffer;
     hr = WmiQueryAllData(hWmiHandle, &nBufferSize, pAllDataBuffer);
     if (hr != ERROR_SUCCESS)
+    {
+        std::cout << "2) WmiQueryAllData() failed: " << GetLastError() << std::endl;
         return {};
+    }
 
 
     while (true)

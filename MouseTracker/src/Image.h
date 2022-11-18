@@ -126,7 +126,7 @@ public:
             pathStr += ".png";
 
         if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, 1, m_Data, m_Width) == 0)
-            std::cerr << "Failed to write image [" << path << "]\n";
+            std::cout << "Failed to write image [" << path << "]\n";
     }
 
 
@@ -136,7 +136,7 @@ public:
         unsigned char* data = stbi_load(path.data(), &m_Width, &m_Height, &cmp, 1);
         if (data == NULL)
         {
-            std::cerr << "Failed to load image from file\n";
+            std::cout << "Failed to load image from file\n";
             return;
         }
 

@@ -17,7 +17,7 @@ public:
         const GLFWvidmode* const mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
         if (mode == NULL)
         {
-            std::cerr << "Failed to retreive resolution\n";
+            std::cout << "glfwGetVideoMode() failed!\n";
             return;
         }
         m_Width = static_cast<unsigned int>(mode->width);

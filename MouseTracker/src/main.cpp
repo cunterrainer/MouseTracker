@@ -48,8 +48,9 @@ std::optional<std::filesystem::path> GetSavePath()
     }
     else if (result != NFD_CANCEL)
     {
-        std::cerr << "Failed to open file [" << savePath << "]\n";
+        std::cout << "Failed to open file [" << savePath << "]\n";
     }
+    std::cout << "Canceled\n";
     return std::nullopt;
 }
 
@@ -67,7 +68,7 @@ std::optional<std::string> GetImagePath()
     // error opening the file
     else if (result != NFD_CANCEL)
     {
-        std::cerr << "Failed to open file [" << outPath << "]\n";
+        std::cout << "Failed to open file [" << outPath << "]\n";
     }
     return std::nullopt;
 }
@@ -148,7 +149,7 @@ int main()
 
         if (GetCursorPos(&pos) == 0)
         {
-            std::cerr << "GetCursorPos() error: " << GetLastError() << std::endl;
+            std::cout << "GetCursorPos() error: " << GetLastError() << std::endl;
         }
         else if(tracking)
         {
