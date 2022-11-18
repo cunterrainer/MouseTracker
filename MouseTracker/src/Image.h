@@ -1,10 +1,15 @@
 #pragma once
+#include <filesystem>
+#include <algorithm>
 #include <cstring>
+#include <string>
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "GLFW/glfw3.h"
 #include "ImGui/imgui.h"
 #include "stb/stb_image.h"
+#include "stb/stb_image_write.h"
 
 class Image
 {
@@ -82,5 +87,18 @@ public:
             glBindTexture(GL_TEXTURE_2D, m_GpuImage);
             glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
         }
+    }
+
+
+    void WriteToFile(const std::filesystem::path& path) const
+    {
+        std::string pathStr = path.string();
+        std::string extension = path.extension().string();
+        std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) { return std::tolower(c); });
+        if (extension != ".png")
+            pathStr += ".png";
+
+        if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, 1, m_Data, m_Width) == 0)
+            std::cerr << "Failed to write image [" << path << "]\n";
     }
 };

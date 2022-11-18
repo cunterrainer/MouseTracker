@@ -2,9 +2,12 @@ project "MouseTracker"
     language "C++"
     cppdialect "C++17"
 
+    defines "_CRT_SECURE_NO_WARNINGS"
+
     files {
         "src/**.cpp",
-        "src/**.h"
+        "src/**.h",
+        "vendor/**.h"
     }
 
     includedirs {

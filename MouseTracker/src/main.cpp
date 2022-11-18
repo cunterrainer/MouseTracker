@@ -1,8 +1,12 @@
+#include <filesystem>
 #include <iostream>
+#include <optional>
 #include <cstring>
+#include <string>
 #include <Windows.h>
 
 #include "ImGui/imgui.h"
+#include "nfd/nfd.h"
 
 #include "Window.h"
 #include "Monitor.h"
@@ -26,7 +30,34 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking)
+std::optional<std::filesystem::path> GetSavePath()
+{
+    nfdchar_t* savePath = NULL;
+    nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
+    if (result == NFD_OKAY)
+    {
+        const std::filesystem::path path = savePath;
+        free(savePath);
+        return { path };
+    }
+    else if (result != NFD_CANCEL)
+    {
+        std::cerr << "Failed to open file [" << savePath << "]\n";
+    }
+    return std::nullopt;
+}
+
+
+void SaveImage(const Image& img)
+{
+    const std::optional<std::filesystem::path> path = GetSavePath();
+    if (!path.has_value())
+        return;
+    img.WriteToFile(path.value());
+}
+
+
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, const Image& img)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -44,7 +75,8 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mIn
         tracking = !tracking;
     ImGui::PopStyleColor();
 
-    ImGui::Button("Save image");
+    if (ImGui::Button("Save image"))
+        SaveImage(img);
     ImGui::SameLine(ImGui::GetItemRectSize().x + 20);
     ImGui::Button("Load image");
 
@@ -78,7 +110,7 @@ int main()
             i.Update(pos.x, pos.y, 0);
         }
         ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking);
+        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking, i);
 
         w.ImGuiRender();
         w.PollEvents();
