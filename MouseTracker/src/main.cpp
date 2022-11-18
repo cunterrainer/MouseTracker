@@ -11,6 +11,7 @@
 #include "Window.h"
 #include "Monitor.h"
 #include "Image.h"
+#include "Log.h"
 
 // not using glfw since it doesn't record key presses if window isn't focused
 inline bool KeyPressed(int key)
