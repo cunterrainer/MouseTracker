@@ -57,7 +57,7 @@ std::optional<std::filesystem::path> GetSavePath()
 std::optional<std::string> GetImagePath()
 {
     nfdchar_t* outPath = NULL;
-    nfdresult_t result = NFD_OpenDialog("", NULL, &outPath);
+    nfdresult_t result = NFD_OpenDialog("png,jpeg,jpg", NULL, &outPath);
     if (result == NFD_OKAY)
     {
         const std::string filePath = outPath;
