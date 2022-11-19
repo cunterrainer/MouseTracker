@@ -135,15 +135,24 @@ std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
 void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, size_t& selectedMonitor)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
+    ImGui::PushStyleColor(ImGuiCol_Button, { 0.27f, 0.27f, 0.27f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.57f, 0.57f, 0.57f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_ButtonActive, { 0.57f, 0.57f, 0.57f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_FrameBg, { 0.27f, 0.27f, 0.27f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, { 0.57f, 0.57f, 0.57f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_Header, { 0.27f, 0.27f, 0.27f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_HeaderHovered, { 0.57f, 0.57f, 0.57f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_HeaderActive, { 0.27f, 0.27f, 0.27f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_CheckMark, { 0.7f,   0.7f,   0.7f, 1.0f });
+    ImGui::PushStyleColor(ImGuiCol_FrameBgActive, { 0.57f, 0.57f, 0.57f, 1.0f });
     ImGui::SetWindowPos({ 0, 0 });
     ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
-
-    static const std::string mSelection = ConcatSelection(mInfo);
 
     ImGui::LabelText("Resolution", "%dx%d", mInfo[selectedMonitor].w, mInfo[selectedMonitor].h);
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", CURSOR_POS(pos.x, mInfo[selectedMonitor].x), CURSOR_POS(pos.y, mInfo[selectedMonitor].y));
     
     const size_t prevMonitor = selectedMonitor;
+    static const std::string mSelection = ConcatSelection(mInfo);
     if (ImGui::Combo("##Monitor", (int*)&selectedMonitor, mSelection.c_str()))
     {
         const MonitorInfo& pm = mInfo[prevMonitor];
@@ -186,6 +195,7 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
 
     if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
         img.Reset();
+    ImGui::PopStyleColor(10);
     ImGui::End();
 }
 
