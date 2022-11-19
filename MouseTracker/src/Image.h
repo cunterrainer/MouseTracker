@@ -4,6 +4,7 @@
 #include <cstring>
 #include <string>
 #include <new>
+#include <Windows.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -90,13 +91,14 @@ private:
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
     }
 public:
-    inline Image(ImVec2 res) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
+    inline Image(ImVec2 res, HWND wHandle) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
     {
         const size_t pixel = (size_t)(m_Height*m_Width);
         m_Data = new (std::nothrow) unsigned char[pixel];
         if (m_Data == nullptr)
         {
             Err << "{Image} Failed to allocate memory for internal array" << std::endl;
+            MessageBoxW(wHandle, L"Failed to allocate memory for the internal array!", L"Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
             return;
         }
         std::memset(m_Data, 255, pixel);
@@ -122,12 +124,12 @@ public:
 
     inline void Update(int x, int y, bool bpm)
     {
-        if (SetPixel(x, y, bpm))
+        if (m_Data != nullptr && SetPixel(x, y, bpm))
             UpdateGpu();
     }
 
 
-    void WriteToFile(const std::filesystem::path& path) const
+    bool WriteToFile(const std::filesystem::path& path) const
     {
         std::string pathStr = path.string();
         std::string extension = path.extension().string();
@@ -138,26 +140,28 @@ public:
         if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, 1, m_Data, m_Width) == 0)
         {
             Err << "Failed to write image w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
-            return;
+            return false;
         }
         Log << "Successfully wrote image w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
+        return true;
     }
 
 
-    void LoadFromFile(const std::string_view& path)
+    bool LoadFromFile(const std::string_view& path)
     {
         int cmp;
         unsigned char* data = stbi_load(path.data(), &m_Width, &m_Height, &cmp, 1);
         if (data == NULL)
         {
             Err << "Failed to load image from file [" << path << "]" << std::endl;
-            return;
+            return false;
         }
         Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
 
         DeleteTexture();
         m_Data = data;
         m_GpuImage = GenerateTexture();
+        return true;
     }
 
 

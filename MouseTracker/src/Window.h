@@ -2,7 +2,9 @@
 #include <string>
 #include <utility>
 
+#define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3.h"
+#include "GLFW/glfw3native.h"
 
 #define IMGUI_WINDOW_FLAGS ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoTitleBar
 
@@ -22,6 +24,7 @@ public:
 	inline void WaitEvents() const	{ glfwWaitEvents();							}
 
 	ImVec2 GetSize() const;
+	HWND GetNativeHandle() const    { return glfwGetWin32Window(m_Window);      }
 
 	// ImGui
 	void ImGuiInit(const char* iniFileName = nullptr) const;

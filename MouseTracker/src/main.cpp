@@ -37,7 +37,7 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 }
 
 
-std::optional<std::filesystem::path> GetSavePath()
+std::optional<std::filesystem::path> GetSavePath(HWND wHandle)
 {
     nfdchar_t* savePath = NULL;
     nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
@@ -51,12 +51,16 @@ std::optional<std::filesystem::path> GetSavePath()
     else if (result == NFD_CANCEL)
         Log << "GetSavePath() user pressed cancel" << std::endl;
     else
-        Err << "GetSavePath() failed to open file [" << savePath << "]" << std::endl;
+    {
+        const std::string errorMsg = "Failed to open file [" + std::string(savePath) + "]";
+        Err << "GetSavePath() " << errorMsg << std::endl;
+        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+    }
     return std::nullopt;
 }
 
 
-std::optional<std::string> GetImagePath()
+std::optional<std::string> GetImagePath(HWND wHandle)
 {
     nfdchar_t* outPath = NULL;
     nfdresult_t result = NFD_OpenDialog("png,jpeg,jpg", NULL, &outPath);
@@ -69,31 +73,43 @@ std::optional<std::string> GetImagePath()
     }
     else if (result == NFD_CANCEL)
         Log << "GetImagePath() user pressed cancel" << std::endl;
-    else // error opening the file
-        Err << "GetImagePath() failed to open file [" << outPath << "]" << std::endl;
+    else
+    {
+        const std::string errorMsg = "Failed to open file [" + std::string(outPath) + "]";
+        Err << "GetImagePath() " << errorMsg << std::endl;
+        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+    }
     return std::nullopt;
 }
 
 
-inline void SaveImage(const Image& img)
+inline void SaveImage(const Image& img, HWND wHandle)
 {
-    const std::optional<std::filesystem::path> path = GetSavePath();
+    const std::optional<std::filesystem::path> path = GetSavePath(wHandle);
     if (!path.has_value())
         return;
-    img.WriteToFile(path.value());
+    if (!img.WriteToFile(path.value()))
+    {
+        const std::string errorMsg = "Failed to write image [" + path.value().string() + "]";
+        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+    }
 }
 
 
-inline void LoadImg(Image& img)
+inline void LoadImg(Image& img, HWND wHandle)
 {
-    std::optional<std::string> path = GetImagePath();
+    std::optional<std::string> path = GetImagePath(wHandle);
     if (!path.has_value())
         return;
-    img.LoadFromFile(path.value());
+    if (!img.LoadFromFile(path.value()))
+    {
+        const std::string errorMsg = "Failed to load image [" + path.value() + "]";
+        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+    }
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, bool& bigPixelMode, Image& img)
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -114,16 +130,14 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mIn
         tracking = !tracking;
     ImGui::PopStyleColor();
 
-    if (ImGui::Button("Save image"))
-        SaveImage(img);
+    if (ImGui::Button("Save image", {104,0}))
+        SaveImage(img, wHandle);
     ImGui::SameLine(ImGui::GetItemRectSize().x + 20);
     if (ImGui::Button("Load image"))
-        LoadImg(img);
+        LoadImg(img, wHandle);
 
-    ImGui::Button("Reset image(Double click)");
-    if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(0))
+    if (ImGui::Button("Reset image") && MessageBoxW(wHandle, L"Do you really want to reset the tracking image? This change can't be undone!", L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_APPLMODAL) == IDYES)
         img.Reset();
-
     ImGui::End();
 }
 
@@ -132,9 +146,11 @@ int main()
 {
     Window w;
     Monitor m;
-    Image i(m.Resolution());
+    Image i(m.Resolution(), w.GetNativeHandle());
     
     std::vector<MonitorInfo> mInfo = GetMonitors();
+    if (mInfo.empty())
+        mInfo.push_back({L"", L"", L"Unknown", L"", L""});
 
     POINT pos{ 0,0 };
     POINT prevPos{ 1,1 };
@@ -159,7 +175,7 @@ int main()
             i.Update(pos.x, pos.y, bigPixelMode);
         }
         ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking, bigPixelMode, i);
+        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking, bigPixelMode, i, w.GetNativeHandle());
 
         w.ImGuiRender();
         w.PollEvents();
