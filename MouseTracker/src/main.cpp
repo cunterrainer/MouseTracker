@@ -150,8 +150,18 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
         const MonitorInfo& sm = mInfo[selectedMonitor];
         if (pm.w != sm.w || pm.h != sm.h)
         {
-            if (MsgBoxWarning("Chaning the monitor will cause the image to be lost because the monitors have different resolutions! Do you want to continue?") == IDYES)
+            if (MsgBoxWarning("Changing the monitor will cause the image to be lost because the monitors have different resolutions! Do you want to continue?") == IDYES)
+            {
                 img.Resize(sm.w, sm.h);
+                if (selectedMonitor == mInfo.size() - 1)
+                {
+                    img.SetAllPixel(80);
+                    for (size_t i = 0; i < mInfo.size() - 1; ++i)
+                    {
+                        img.SetPixelRange(CURSOR_POS(mInfo[i].x, mInfo.back().x), CURSOR_POS(mInfo[i].y, mInfo.back().y), mInfo[i].w, mInfo[i].h, 255);
+                    }
+                }
+            }
             else
                 selectedMonitor = prevMonitor;
         }

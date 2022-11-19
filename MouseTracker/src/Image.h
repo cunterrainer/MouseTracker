@@ -198,4 +198,26 @@ public:
         UpdateGpu();
         Log << "{Image} Reset image w: " << m_Width << " h: " << m_Height << std::endl;
     }
+
+
+    inline void SetAllPixel(int c)
+    {
+        std::memset(m_Data, c, (size_t)(m_Width * m_Height));
+        UpdateGpu();
+    }
+
+
+    inline void SetPixelRange(int x, int y, int w, int h, unsigned char c)
+    {
+        for (int i = x; i < x+w; ++i)
+        {
+            for (int k = y; k < y+h; ++k)
+            {
+                const int index = GetIndex(i, k);
+                if (index != -1)
+                    m_Data[index] = c;
+            }
+        }
+        UpdateGpu();
+    }
 };
