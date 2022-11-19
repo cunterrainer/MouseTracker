@@ -4,7 +4,6 @@
 #include <cstring>
 #include <string>
 #include <new>
-#include <Windows.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -98,9 +97,9 @@ private:
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
     }
 public:
-    inline Image(int width, int height, HWND wHandle)
+    inline Image(int width, int height)
     {
-        Resize(width, height, wHandle);
+        Resize(width, height);
     }
 
 
@@ -110,15 +109,15 @@ public:
     }
 
 
-    inline void Resize(int width, int height, HWND wHandle)
+    inline void Resize(int width, int height)
     {
         DeleteTexture();
         const size_t pixel = (size_t)(width * height);
         m_Data = new (std::nothrow) unsigned char[pixel];
         if (m_Data == nullptr)
         {
-            Err << "{Image} Failed to allocate memory for internal array" << std::endl;
-            MessageBoxW(wHandle, L"Failed to allocate memory for the internal array!", L"Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+            Err << "{Image} Failed to allocate memory for the internal array" << std::endl;
+            MsgBoxError("Failed to allocate memory for the internal array!");
             return;
         }
         std::memset(m_Data, 255, pixel);
@@ -166,7 +165,7 @@ public:
     }
 
 
-    bool LoadFromFile(const std::string_view& path, HWND wHandle)
+    bool LoadFromFile(const std::string_view& path)
     {
         int width, height, cmp;
         unsigned char* data = stbi_load(path.data(), &width, &height, &cmp, 1);
@@ -177,10 +176,11 @@ public:
         }
         if (width != m_Width || height != m_Height)
         {
+            stbi_image_free(data);
             std::string msg = "Couldn't load image since it doesn't match the monitors resolution!\nMonitor: ";
             msg += std::to_string(m_Width) + 'x' + std::to_string(m_Height) + "\nImage: ";
             msg += std::to_string(width) + 'x' + std::to_string(height);
-            MessageBoxA(wHandle, msg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+            MsgBoxError(msg.c_str());
             return true;
         }
 

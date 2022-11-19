@@ -39,7 +39,7 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 }
 
 
-std::optional<std::filesystem::path> GetSavePath(HWND wHandle)
+std::optional<std::filesystem::path> GetSavePath()
 {
     nfdchar_t* savePath = NULL;
     nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
@@ -56,13 +56,13 @@ std::optional<std::filesystem::path> GetSavePath(HWND wHandle)
     {
         const std::string errorMsg = "Failed to open file [" + std::string(savePath) + "]";
         Err << "GetSavePath() " << errorMsg << std::endl;
-        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+        MsgBoxError(errorMsg.c_str());
     }
     return std::nullopt;
 }
 
 
-std::optional<std::string> GetImagePath(HWND wHandle)
+std::optional<std::string> GetImagePath()
 {
     nfdchar_t* outPath = NULL;
     nfdresult_t result = NFD_OpenDialog("png,jpeg,jpg", NULL, &outPath);
@@ -79,34 +79,34 @@ std::optional<std::string> GetImagePath(HWND wHandle)
     {
         const std::string errorMsg = "Failed to open file [" + std::string(outPath) + "]";
         Err << "GetImagePath() " << errorMsg << std::endl;
-        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+        MsgBoxError(errorMsg.c_str());
     }
     return std::nullopt;
 }
 
 
-inline void SaveImage(const Image& img, HWND wHandle)
+inline void SaveImage(const Image& img)
 {
-    const std::optional<std::filesystem::path> path = GetSavePath(wHandle);
+    const std::optional<std::filesystem::path> path = GetSavePath();
     if (!path.has_value())
         return;
     if (!img.WriteToFile(path.value()))
     {
         const std::string errorMsg = "Failed to write image [" + path.value().string() + "]";
-        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+        MsgBoxError(errorMsg.c_str());
     }
 }
 
 
-inline void LoadImg(Image& img, HWND wHandle)
+inline void LoadImg(Image& img)
 {
-    std::optional<std::string> path = GetImagePath(wHandle);
+    std::optional<std::string> path = GetImagePath();
     if (!path.has_value())
         return;
-    if (!img.LoadFromFile(path.value(), wHandle))
+    if (!img.LoadFromFile(path.value()))
     {
         const std::string errorMsg = "Failed to load image [" + path.value() + "]";
-        MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+        MsgBoxError(errorMsg.c_str());
     }
 }
 
@@ -124,7 +124,7 @@ std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
 }
 
 
-void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle, size_t& selectedMonitor)
+void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, size_t& selectedMonitor)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -142,8 +142,8 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
         const MonitorInfo& sm = mInfo[selectedMonitor];
         if (pm.w != sm.w || pm.h != sm.h)
         {
-            if (MessageBoxA(wHandle, "Chaning the monitor will cause the image to be lost because the monitors have different resolutions! Do you want to continue?", "Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_APPLMODAL) == IDYES)
-                img.Resize(sm.w, sm.h, wHandle);
+            if (MsgBoxWarning("Chaning the monitor will cause the image to be lost because the monitors have different resolutions! Do you want to continue?") == IDYES)
+                img.Resize(sm.w, sm.h);
             else
                 selectedMonitor = prevMonitor;
         }
@@ -161,12 +161,12 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
     ImGui::PopStyleColor();
 
     if (ImGui::Button("Save image", {104,0}))
-        SaveImage(img, wHandle);
+        SaveImage(img);
     ImGui::SameLine(ImGui::GetItemRectSize().x + 20);
     if (ImGui::Button("Load image"))
-        LoadImg(img, wHandle);
+        LoadImg(img);
 
-    if (ImGui::Button("Reset image") && MessageBoxW(wHandle, L"Do you really want to reset the tracking image? This change can't be undone!", L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_APPLMODAL) == IDYES)
+    if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
         img.Reset();
     ImGui::End();
 }
@@ -174,14 +174,14 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
 
 int main()
 {
-    Window w;
+    const Window& window = GetWindow();
     std::vector<MonitorInfo> mInfo = GetMonitors(); // mInfo[0] primary monitor
     if (mInfo.empty())
     {
-        MessageBoxA(w.GetNativeHandle(), "Failed to load monitor data", "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+        MessageBoxA(window.GetNativeHandle(), "Failed to load monitor data", "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
         return 1;
     }
-    Image i(mInfo[0].w, mInfo[0].h, w.GetNativeHandle());
+    Image i(mInfo[0].w, mInfo[0].h);
 
 
     POINT pos{ 0,0 };
@@ -189,10 +189,10 @@ int main()
     bool tracking = false;
     bool bigPixelMode = false;
     size_t selectedMonitor = 0;
-    while (w.IsOpen())
+    while (window.IsOpen())
     {
-        w.Clear();
-        w.ImGuiStartFrame();
+        window.Clear();
+        window.ImGuiStartFrame();
         if (KeyPressed(VK_F9))
             tracking = !tracking;
         else if (KeyPressed(VK_F8))
@@ -207,11 +207,11 @@ int main()
         {
             i.Update(CURSOR_POS(pos.x, mInfo[selectedMonitor].x), CURSOR_POS(pos.y, mInfo[selectedMonitor].y), bigPixelMode);
         }
-        ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), pos, mInfo, tracking, bigPixelMode, i, w.GetNativeHandle(), selectedMonitor);
+        ImageWindow(window.GetSize(), i);
+        SettingsWindow(window.GetSize(), pos, mInfo, tracking, bigPixelMode, i, selectedMonitor);
 
-        w.ImGuiRender();
-        w.PollEvents();
-        w.Swap();
+        window.ImGuiRender();
+        window.PollEvents();
+        window.Swap();
     }
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <utility>
+#include <Windows.h>
 
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include "GLFW/glfw3.h"
@@ -31,3 +32,12 @@ public:
 	void ImGuiStartFrame() const;
 	void ImGuiRender() const;
 };
+
+inline const Window& GetWindow()
+{
+	static const Window w;
+	return w;
+}
+
+inline int MsgBoxError(LPCSTR message)   { return MessageBoxA(GetWindow().GetNativeHandle(), message, "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL); }
+inline int MsgBoxWarning(LPCSTR message) { return MessageBoxA(GetWindow().GetNativeHandle(), message, "Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_APPLMODAL); }
