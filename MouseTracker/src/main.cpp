@@ -3,6 +3,8 @@
 #include <optional>
 #include <cstring>
 #include <string>
+#include <thread>
+#include <chrono>
 #include <Windows.h>
 
 #include "ImGui/imgui.h"
@@ -132,7 +134,7 @@ std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
 }
 
 
-void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, size_t& selectedMonitor)
+void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, bool& sleepWhileIdle, Image& img, size_t& selectedMonitor)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::PushStyleColor(ImGuiCol_Button, { 0.27f, 0.27f, 0.27f, 1.0f });
@@ -176,6 +178,9 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
         }
     }
     
+    if (ImGui::RadioButton("Sleep while idle [F7]", sleepWhileIdle))
+        sleepWhileIdle = !sleepWhileIdle;
+
     if (ImGui::RadioButton("Big pixel mode [F8]", bigPixelMode))
         bigPixelMode = !bigPixelMode;
 
@@ -189,10 +194,13 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
 
     if (ImGui::Button("Save image", {104,0}))
         SaveImage(img);
-    ImGui::SameLine(ImGui::GetItemRectSize().x + 20);
+
+    const float loadImageX = ImGui::GetItemRectSize().x + 20.f;
+    ImGui::SameLine(loadImageX);
     if (ImGui::Button("Load image"))
         LoadImg(img);
 
+    ImGui::SameLine(loadImageX + ImGui::GetItemRectSize().x + 10);
     if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
         img.Reset();
     ImGui::PopStyleColor(10);
@@ -216,7 +224,9 @@ int main()
     POINT prevPos{ 1,1 };
     bool tracking = false;
     bool bigPixelMode = false;
+    bool sleepWhileIdle = true;
     size_t selectedMonitor = 0;
+    auto startTime = std::chrono::high_resolution_clock::now();
     while (window.IsOpen())
     {
         window.Clear();
@@ -225,6 +235,8 @@ int main()
             tracking = !tracking;
         else if (KeyPressed(VK_F8))
             bigPixelMode = !bigPixelMode;
+        else if (KeyPressed(VK_F7))
+            sleepWhileIdle = !sleepWhileIdle;
 
         prevPos = pos;
         if (GetCursorPos(&pos) == 0)
@@ -234,9 +246,14 @@ int main()
         else if ((pos.x != prevPos.x || pos.y != prevPos.y) && tracking)
         {
             i.Update(CURSOR_POS(pos.x, mInfo[selectedMonitor].x), CURSOR_POS(pos.y, mInfo[selectedMonitor].y), bigPixelMode);
+            startTime = std::chrono::high_resolution_clock::now();
+        }
+        else if(sleepWhileIdle && std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - startTime).count() > 200)
+        {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         ImageWindow(window.GetSize(), i);
-        SettingsWindow(window.GetSize(), pos, mInfo, tracking, bigPixelMode, i, selectedMonitor);
+        SettingsWindow(window.GetSize(), pos, mInfo, tracking, bigPixelMode, sleepWhileIdle, i, selectedMonitor);
 
         window.ImGuiRender();
         window.PollEvents();
