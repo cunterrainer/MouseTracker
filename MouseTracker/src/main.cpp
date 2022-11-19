@@ -30,10 +30,22 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 
     const float y = image.Resolution().y / (wSize.y * (3.f / 4.f));
     const float xPos = (wSize.x - image.Resolution().x / y) / 2.f;
+    if (xPos >= 0.f)
+    {
+        const ImVec2 p = ImGui::GetCursorScreenPos();
+        ImGui::SetCursorScreenPos(ImVec2(p.x + xPos, p.y));
+        ImGui::Image((void*)(intptr_t)image.GetGpuImage(), { image.Resolution().x / y, image.Resolution().y / y });
+    }
+    else
+    {
+        const float x = image.Resolution().x / wSize.x;
+        const float yPos = (wSize.y * (3.f / 4.f) - image.Resolution().y / x) / 2.f;
 
-    const ImVec2 p = ImGui::GetCursorScreenPos();
-    ImGui::SetCursorScreenPos(ImVec2(p.x + xPos, p.y));
-    ImGui::Image((void*)(intptr_t)image.GetGpuImage(), {image.Resolution().x / y, image.Resolution().y / y});
+        const ImVec2 p = ImGui::GetCursorScreenPos();
+        ImGui::SetCursorScreenPos(ImVec2(p.x, p.y + yPos));
+        ImGui::Image((void*)(intptr_t)image.GetGpuImage(), { image.Resolution().x / x, image.Resolution().y / x });
+    }
+
     ImGui::End();
     ImGui::PopStyleVar();
 }
@@ -126,7 +138,7 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
     ImGui::SetWindowPos({ 0, 0 });
     ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
 
-    static std::string mSelection = ConcatSelection(mInfo);
+    static const std::string mSelection = ConcatSelection(mInfo);
 
     ImGui::LabelText("Resolution", "%dx%d", mInfo[selectedMonitor].w, mInfo[selectedMonitor].h);
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", CURSOR_POS(pos.x, mInfo[selectedMonitor].x), CURSOR_POS(pos.y, mInfo[selectedMonitor].y));

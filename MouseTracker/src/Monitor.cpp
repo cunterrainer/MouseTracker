@@ -58,6 +58,27 @@ void SetVideoMode(std::vector<MonitorInfo>& mInfo)
 }
 
 
+void SetAllMonitors(std::vector<MonitorInfo>& mInfo)
+{
+    int x = 0;
+    int y = 0;
+    int w = 0;
+    int h = 0;
+
+    for (const MonitorInfo& i : mInfo)
+    {
+        x = i.x < x ? i.x : x;
+        y = i.y < y ? i.y : y;
+
+        const int gx = i.x + i.w;
+        const int gy = i.y + i.h;
+        w = gx > w ? gx : w;
+        h = gy > h ? gy : h;
+    }
+    mInfo.push_back({ L"", L"All", L"", L"", L"", x, y, w-x, h-y });
+}
+
+
 std::vector<MonitorInfo> GetMonitors()
 {
     // Load libraries
@@ -133,5 +154,6 @@ std::vector<MonitorInfo> GetMonitors()
     free(pAllDataBufferOriginal);
     WmiCloseBlock(hWmiHandle);
     SetVideoMode(info);
+    SetAllMonitors(info);
     return info;
 }
