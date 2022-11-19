@@ -37,6 +37,7 @@ void SetVideoMode(std::vector<MonitorInfo>& mInfo)
     if (m == NULL || count != (int)mInfo.size())
     {
         Err << "glfwGetMonitors() failed! count: " << count << " mInfo.size(): " << mInfo.size() << std::endl;
+        mInfo.clear();
         return;
     }
 

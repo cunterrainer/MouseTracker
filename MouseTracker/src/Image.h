@@ -91,7 +91,7 @@ private:
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
     }
 public:
-    inline Image(ImVec2 res, HWND wHandle) : m_Width(static_cast<int>(res.x)), m_Height(static_cast<int>(res.y))
+    inline Image(int width, int height, HWND wHandle) : m_Width(width), m_Height(height)
     {
         const size_t pixel = (size_t)(m_Height*m_Width);
         m_Data = new (std::nothrow) unsigned char[pixel];

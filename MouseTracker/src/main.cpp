@@ -122,7 +122,7 @@ std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle)
+void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
@@ -131,9 +131,9 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const std::vector<Moni
     static int selectedMonitor = 0;
     static std::string mSelection = ConcatSelection(mInfo);
 
-    ImGui::LabelText("Resolution", "%ux%u", (unsigned int)mRes.x, (unsigned int)mRes.y);
+    ImGui::LabelText("Resolution", "%dx%d", mInfo[selectedMonitor].w, mInfo[selectedMonitor].h);
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", pos.x, pos.y);
-    ImGui::Combo("Monitor", &selectedMonitor, mSelection.c_str());
+    ImGui::Combo("##Monitor", &selectedMonitor, mSelection.c_str());
     
     if (ImGui::RadioButton("Big pixel mode [F8]", bigPixelMode))
         bigPixelMode = !bigPixelMode;
@@ -161,12 +161,14 @@ void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const std::vector<Moni
 int main()
 {
     Window w;
-    Monitor m;
-    Image i(m.Resolution(), w.GetNativeHandle());
-    
-    std::vector<MonitorInfo> mInfo = GetMonitors();
+    std::vector<MonitorInfo> mInfo = GetMonitors(); // mInfo[0] primary monitor
     if (mInfo.empty())
+    {
+        MessageBoxA(w.GetNativeHandle(), "Failed to load monitor data", "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
         return 1;
+    }
+    Image i(mInfo[0].w, mInfo[0].h, w.GetNativeHandle());
+
 
     POINT pos{ 0,0 };
     POINT prevPos{ 1,1 };
@@ -191,7 +193,7 @@ int main()
             i.Update(pos.x, pos.y, bigPixelMode);
         }
         ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo, tracking, bigPixelMode, i, w.GetNativeHandle());
+        SettingsWindow(w.GetSize(), pos, mInfo, tracking, bigPixelMode, i, w.GetNativeHandle());
 
         w.ImGuiRender();
         w.PollEvents();
