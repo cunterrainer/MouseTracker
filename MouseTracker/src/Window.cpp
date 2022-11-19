@@ -32,7 +32,7 @@ Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, G
     glfwSetWindowPos(m_Window, (mode->width - width) / 2, (mode->height - height) / 2);
 
     glfwMakeContextCurrent(m_Window);
-    glfwSwapInterval(1);
+    glfwSwapInterval(0);
     glClearColor(0.27f, 0.27f, 0.27f, 1.0f);
     ImGuiInit();
 }
