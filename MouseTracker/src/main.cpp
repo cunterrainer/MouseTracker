@@ -13,6 +13,8 @@
 #include "Image.h"
 #include "Log.h"
 
+#define CURSOR_POS(cPos, mPos) (cPos - mPos)
+
 // not using glfw since it doesn't record key presses if window isn't focused
 inline bool KeyPressed(int key)
 {
@@ -122,17 +124,16 @@ std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
 }
 
 
-void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle)
+void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle, size_t& selectedMonitor)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
     ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
 
-    static size_t selectedMonitor = 0;
     static std::string mSelection = ConcatSelection(mInfo);
 
     ImGui::LabelText("Resolution", "%dx%d", mInfo[selectedMonitor].w, mInfo[selectedMonitor].h);
-    ImGui::LabelText("Cursor position", "x=%ld y=%ld", pos.x, pos.y);
+    ImGui::LabelText("Cursor position", "x=%ld y=%ld", CURSOR_POS(pos.x, mInfo[selectedMonitor].x), CURSOR_POS(pos.y, mInfo[selectedMonitor].y));
     ImGui::Combo("##Monitor", (int*)&selectedMonitor, mSelection.c_str());
     
     if (ImGui::RadioButton("Big pixel mode [F8]", bigPixelMode))
@@ -174,6 +175,7 @@ int main()
     POINT prevPos{ 1,1 };
     bool tracking = false;
     bool bigPixelMode = false;
+    size_t selectedMonitor = 0;
     while (w.IsOpen())
     {
         w.Clear();
@@ -190,10 +192,10 @@ int main()
         }
         else if ((pos.x != prevPos.x || pos.y != prevPos.y) && tracking)
         {
-            i.Update(pos.x, pos.y, bigPixelMode);
+            i.Update(CURSOR_POS(pos.x, mInfo[selectedMonitor].x), CURSOR_POS(pos.y, mInfo[selectedMonitor].y), bigPixelMode);
         }
         ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), pos, mInfo, tracking, bigPixelMode, i, w.GetNativeHandle());
+        SettingsWindow(w.GetSize(), pos, mInfo, tracking, bigPixelMode, i, w.GetNativeHandle(), selectedMonitor);
 
         w.ImGuiRender();
         w.PollEvents();

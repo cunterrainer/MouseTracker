@@ -25,7 +25,7 @@ private:
 private:
     constexpr int GetIndex(int x, int y) const
     {
-        if (x < 0 || y < 0 || x > (m_Width - 1) || y > (m_Height - 1))
+        if (x < 0 || y < 0 || x >= m_Width || y >= m_Height)
             return -1;
         return m_Width * y + x;
     }
