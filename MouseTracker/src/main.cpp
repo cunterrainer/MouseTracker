@@ -103,7 +103,7 @@ inline void LoadImg(Image& img, HWND wHandle)
     std::optional<std::string> path = GetImagePath(wHandle);
     if (!path.has_value())
         return;
-    if (!img.LoadFromFile(path.value()))
+    if (!img.LoadFromFile(path.value(), wHandle))
     {
         const std::string errorMsg = "Failed to load image [" + path.value() + "]";
         MessageBoxA(wHandle, errorMsg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
@@ -134,7 +134,20 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
 
     ImGui::LabelText("Resolution", "%dx%d", mInfo[selectedMonitor].w, mInfo[selectedMonitor].h);
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", CURSOR_POS(pos.x, mInfo[selectedMonitor].x), CURSOR_POS(pos.y, mInfo[selectedMonitor].y));
-    ImGui::Combo("##Monitor", (int*)&selectedMonitor, mSelection.c_str());
+    
+    const size_t prevMonitor = selectedMonitor;
+    if (ImGui::Combo("##Monitor", (int*)&selectedMonitor, mSelection.c_str()))
+    {
+        const MonitorInfo& pm = mInfo[prevMonitor];
+        const MonitorInfo& sm = mInfo[selectedMonitor];
+        if (pm.w != sm.w || pm.h != sm.h)
+        {
+            if (MessageBoxA(wHandle, "Chaning the monitor will cause the image to be lost because the monitors have different resolutions! Do you want to continue?", "Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2 | MB_APPLMODAL) == IDYES)
+                img.Resize(sm.w, sm.h, wHandle);
+            else
+                selectedMonitor = prevMonitor;
+        }
+    }
     
     if (ImGui::RadioButton("Big pixel mode [F8]", bigPixelMode))
         bigPixelMode = !bigPixelMode;

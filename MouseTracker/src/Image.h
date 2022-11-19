@@ -18,10 +18,11 @@
 class Image
 {
 private:
-    int m_Width;
-    int m_Height;
-    unsigned char* m_Data;
+    int m_Width  = 0;
+    int m_Height = 0;
+    unsigned char* m_Data = nullptr;
     GLuint m_GpuImage = 0;
+    bool m_StbiLoaded = false;
 private:
     constexpr int GetIndex(int x, int y) const
     {
@@ -79,7 +80,13 @@ private:
 
     inline void DeleteTexture() const
     {
-        delete[] m_Data;
+        if (m_GpuImage == 0)
+            return;
+
+        if (m_StbiLoaded)
+            stbi_image_free(m_Data);
+        else
+            delete[] m_Data;
         glDeleteTextures(1, &m_GpuImage);
         Log << "Deleted image texture: " << m_GpuImage << std::endl;
     }
@@ -91,9 +98,22 @@ private:
         glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
     }
 public:
-    inline Image(int width, int height, HWND wHandle) : m_Width(width), m_Height(height)
+    inline Image(int width, int height, HWND wHandle)
     {
-        const size_t pixel = (size_t)(m_Height*m_Width);
+        Resize(width, height, wHandle);
+    }
+
+
+    inline ~Image()
+    {
+        DeleteTexture();
+    }
+
+
+    inline void Resize(int width, int height, HWND wHandle)
+    {
+        DeleteTexture();
+        const size_t pixel = (size_t)(width * height);
         m_Data = new (std::nothrow) unsigned char[pixel];
         if (m_Data == nullptr)
         {
@@ -102,13 +122,12 @@ public:
             return;
         }
         std::memset(m_Data, 255, pixel);
+        m_Width = width;
+        m_Height = height;
         m_GpuImage = GenerateTexture();
+        m_StbiLoaded = false;
     }
 
-    inline ~Image()
-    {
-        DeleteTexture();
-    }
 
     inline ImVec2 Resolution() const
     { 
@@ -147,20 +166,31 @@ public:
     }
 
 
-    bool LoadFromFile(const std::string_view& path)
+    bool LoadFromFile(const std::string_view& path, HWND wHandle)
     {
-        int cmp;
-        unsigned char* data = stbi_load(path.data(), &m_Width, &m_Height, &cmp, 1);
+        int width, height, cmp;
+        unsigned char* data = stbi_load(path.data(), &width, &height, &cmp, 1);
         if (data == NULL)
         {
             Err << "Failed to load image from file [" << path << "]" << std::endl;
             return false;
         }
-        Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
+        if (width != m_Width || height != m_Height)
+        {
+            std::string msg = "Couldn't load image since it doesn't match the monitors resolution!\nMonitor: ";
+            msg += std::to_string(m_Width) + 'x' + std::to_string(m_Height) + "\nImage: ";
+            msg += std::to_string(width) + 'x' + std::to_string(height);
+            MessageBoxA(wHandle, msg.c_str(), "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
+            return true;
+        }
 
+        Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
         DeleteTexture();
         m_Data = data;
+        m_Width = width;
+        m_Height = height;
         m_GpuImage = GenerateTexture();
+        m_StbiLoaded = true;
         return true;
     }
 
