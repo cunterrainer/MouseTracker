@@ -184,7 +184,7 @@ public:
             return;
         }
 
-        std::memcpy(m_Data, data, m_Width * m_Height);
+        std::memcpy(m_Data, data, (size_t)(m_Width * m_Height));
         stbi_image_free(data);
         UpdateGpu();
         Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
