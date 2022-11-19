@@ -128,12 +128,12 @@ void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mIn
     ImGui::SetWindowPos({ 0, 0 });
     ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
 
-    static int selectedMonitor = 0;
+    static size_t selectedMonitor = 0;
     static std::string mSelection = ConcatSelection(mInfo);
 
     ImGui::LabelText("Resolution", "%dx%d", mInfo[selectedMonitor].w, mInfo[selectedMonitor].h);
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", pos.x, pos.y);
-    ImGui::Combo("##Monitor", &selectedMonitor, mSelection.c_str());
+    ImGui::Combo("##Monitor", (int*)&selectedMonitor, mSelection.c_str());
     
     if (ImGui::RadioButton("Big pixel mode [F8]", bigPixelMode))
         bigPixelMode = !bigPixelMode;

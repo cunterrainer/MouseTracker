@@ -32,18 +32,25 @@ WCB WmiCloseBlock;
 
 void SetVideoMode(std::vector<MonitorInfo>& mInfo)
 {
-    int count = 0;
-    GLFWmonitor** m = glfwGetMonitors(&count);
-    if (m == NULL || count != (int)mInfo.size())
+    size_t count = 0;
+    GLFWmonitor** m = glfwGetMonitors((int*)&count);
+    if (m == NULL || count != mInfo.size())
     {
         Err << "glfwGetMonitors() failed! count: " << count << " mInfo.size(): " << mInfo.size() << std::endl;
         mInfo.clear();
         return;
     }
 
-    for (int i = 0; i < count; ++i)
+    for (size_t i = 0; i < count; ++i)
     {
         const GLFWvidmode* mode = glfwGetVideoMode(m[i]);
+        if (mode == NULL)
+        {
+            Err << "{SetVideoMode()} glfwGetVideoMode() failed!" << std::endl;
+            mInfo.clear();
+            return;
+        }
+
         mInfo[i].w = mode->width;
         mInfo[i].h = mode->height;
         glfwGetMonitorPos(m[i], &mInfo[i].x, &mInfo[i].y);
