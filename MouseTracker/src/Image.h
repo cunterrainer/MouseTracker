@@ -21,7 +21,6 @@ private:
     int m_Height = 0;
     unsigned char* m_Data = nullptr;
     GLuint m_GpuImage = 0;
-    bool m_StbiLoaded = false;
 private:
     constexpr int GetIndex(int x, int y) const
     {
@@ -79,13 +78,10 @@ private:
 
     inline void DeleteTexture() const
     {
-        if (m_GpuImage == 0)
+        if (m_GpuImage == 0 || m_Data == nullptr)
             return;
 
-        if (m_StbiLoaded)
-            stbi_image_free(m_Data);
-        else
-            delete[] m_Data;
+        delete[] m_Data;
         glDeleteTextures(1, &m_GpuImage);
         Log << "Deleted image texture: " << m_GpuImage << std::endl;
     }
@@ -124,7 +120,6 @@ public:
         m_Width = width;
         m_Height = height;
         m_GpuImage = GenerateTexture();
-        m_StbiLoaded = false;
     }
 
 
@@ -165,14 +160,16 @@ public:
     }
 
 
-    bool LoadFromFile(const std::string_view& path)
+    void LoadFromFile(const std::string& path)
     {
         int width, height, cmp;
         unsigned char* data = stbi_load(path.data(), &width, &height, &cmp, 1);
         if (data == NULL)
         {
-            Err << "Failed to load image from file [" << path << "]" << std::endl;
-            return false;
+            const std::string errorMsg = "Failed to load image [" + path + "]";
+            Err << errorMsg << std::endl;
+            MsgBoxError(errorMsg.c_str());
+            return;
         }
         if (width != m_Width || height != m_Height)
         {
@@ -180,18 +177,17 @@ public:
             std::string msg = "Couldn't load image since it doesn't match the monitors resolution!\nMonitor: ";
             msg += std::to_string(m_Width) + 'x' + std::to_string(m_Height) + "\nImage: ";
             msg += std::to_string(width) + 'x' + std::to_string(height);
+
             MsgBoxError(msg.c_str());
-            return true;
+            std::replace(msg.begin(), msg.end(), '\n', ' ');
+            Err << msg << std::endl;
+            return;
         }
 
+        std::memcpy(m_Data, data, m_Width * m_Height);
+        stbi_image_free(data);
+        UpdateGpu();
         Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
-        DeleteTexture();
-        m_Data = data;
-        m_Width = width;
-        m_Height = height;
-        m_GpuImage = GenerateTexture();
-        m_StbiLoaded = true;
-        return true;
     }
 
 

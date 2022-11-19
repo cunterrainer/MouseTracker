@@ -103,11 +103,7 @@ inline void LoadImg(Image& img)
     std::optional<std::string> path = GetImagePath();
     if (!path.has_value())
         return;
-    if (!img.LoadFromFile(path.value()))
-    {
-        const std::string errorMsg = "Failed to load image [" + path.value() + "]";
-        MsgBoxError(errorMsg.c_str());
-    }
+    img.LoadFromFile(path.value());
 }
 
 
