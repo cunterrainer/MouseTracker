@@ -109,15 +109,31 @@ inline void LoadImg(Image& img, HWND wHandle)
 }
 
 
-void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const MonitorInfo& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle)
+std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
+{
+    std::string selection;
+    for (const MonitorInfo& i : mInfo)
+    {
+        std::string tmp;
+        std::transform(i.userFriendlyName.begin(), i.userFriendlyName.end(), std::back_inserter(tmp), [](wchar_t c) { return (char)c; });
+        selection += tmp + '\0';
+    }
+    return selection;
+}
+
+
+void SettingsWindow(ImVec2 wSize, ImVec2 mRes, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, Image& img, HWND wHandle)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::SetWindowPos({ 0, 0 });
     ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
 
+    static int selectedMonitor = 0;
+    static std::string mSelection = ConcatSelection(mInfo);
+
     ImGui::LabelText("Resolution", "%ux%u", (unsigned int)mRes.x, (unsigned int)mRes.y);
     ImGui::LabelText("Cursor position", "x=%ld y=%ld", pos.x, pos.y);
-    ImGui::LabelText("Monitor", "%ls %ls", mInfo.manufacturerName.c_str(), mInfo.userFriendlyName.c_str());
+    ImGui::Combo("Monitor", &selectedMonitor, mSelection.c_str());
     
     if (ImGui::RadioButton("Big pixel mode [F8]", bigPixelMode))
         bigPixelMode = !bigPixelMode;
@@ -150,7 +166,7 @@ int main()
     
     std::vector<MonitorInfo> mInfo = GetMonitors();
     if (mInfo.empty())
-        mInfo.push_back({L"", L"", L"Unknown", L"", L""});
+        return 1;
 
     POINT pos{ 0,0 };
     POINT prevPos{ 1,1 };
@@ -175,7 +191,7 @@ int main()
             i.Update(pos.x, pos.y, bigPixelMode);
         }
         ImageWindow(w.GetSize(), i);
-        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo[0], tracking, bigPixelMode, i, w.GetNativeHandle());
+        SettingsWindow(w.GetSize(), m.Resolution(), pos, mInfo, tracking, bigPixelMode, i, w.GetNativeHandle());
 
         w.ImGuiRender();
         w.PollEvents();

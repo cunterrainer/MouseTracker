@@ -1,8 +1,11 @@
 #include <iostream>
+#include <vector>
 #include <Windows.h>
 #include <tchar.h>
 #include <initguid.h>
 #include <wmistr.h>
+
+#include "GLFW/glfw3.h"
 
 #include "Monitor.h"
 #include "Log.h"
@@ -25,6 +28,26 @@ typedef HRESULT(WINAPI* WQAD) (IN LONG hWMIHandle, ULONG* nBufferSize, OUT UCHAR
 WQAD WmiQueryAllData;
 typedef HRESULT(WINAPI* WCB) (IN LONG);
 WCB WmiCloseBlock;
+
+
+void SetVideoMode(std::vector<MonitorInfo>& mInfo)
+{
+    int count = 0;
+    GLFWmonitor** m = glfwGetMonitors(&count);
+    if (m == NULL || count != (int)mInfo.size())
+    {
+        Err << "glfwGetMonitors() failed! count: " << count << " mInfo.size(): " << mInfo.size() << std::endl;
+        return;
+    }
+
+    for (int i = 0; i < count; ++i)
+    {
+        const GLFWvidmode* mode = glfwGetVideoMode(m[i]);
+        mInfo[i].w = mode->width;
+        mInfo[i].h = mode->height;
+        glfwGetMonitorPos(m[i], &mInfo[i].x, &mInfo[i].y);
+    }
+}
 
 
 std::vector<MonitorInfo> GetMonitors()
@@ -101,5 +124,6 @@ std::vector<MonitorInfo> GetMonitors()
     }
     free(pAllDataBufferOriginal);
     WmiCloseBlock(hWmiHandle);
+    SetVideoMode(info);
     return info;
 }
