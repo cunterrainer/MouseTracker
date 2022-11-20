@@ -83,12 +83,17 @@ std::vector<MonitorInfo> GetMonitors()
 {
     // Load libraries
     HINSTANCE hDLL = LoadLibraryW(L"Advapi32.dll");
+    if (hDLL == NULL)
+    {
+        Err << "Failed to load library Advapi32.dll" << std::endl;
+        return {};
+    }
     WmiOpenBlock = (WOB)GetProcAddress(hDLL, "WmiOpenBlock");
     WmiQueryAllData = (WQAD)GetProcAddress(hDLL, "WmiQueryAllDataW");
     WmiCloseBlock = (WCB)GetProcAddress(hDLL, "WmiCloseBlock");
     if (WmiOpenBlock == NULL || !WmiQueryAllData || !WmiCloseBlock)
     {
-        Err << "Failed to load either WmiOpenBlock or WmiQueryAllData or WmiCloseBlock" << std::endl;
+        Err << "Failed to load either WmiOpenBlock or WmiQueryAllData or WmiCloseBlock: " << GetLastError() << std::endl;
         return {};
     }
 
@@ -103,7 +108,7 @@ std::vector<MonitorInfo> GetMonitors()
 
 
     ULONG nBufferSize = 0;
-    hr = WmiQueryAllData(hWmiHandle, &nBufferSize, 0);
+    hr = WmiQueryAllData(hWmiHandle, &nBufferSize, NULL);
     if (hr != ERROR_INSUFFICIENT_BUFFER)
     {
         Err << "1) WmiQueryAllData() failed: " << GetLastError() << std::endl;
