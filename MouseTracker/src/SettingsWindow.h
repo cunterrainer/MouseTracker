@@ -49,58 +49,36 @@ private:
         return GetAsyncKeyState(key) & 0x01;
     }
 
-    inline std::optional<std::filesystem::path> GetSavePath() const
+
+    inline std::optional<std::filesystem::path> GetPath(nfdresult_t(*NFD_DialogFunc)(const nfdchar_t*, const nfdchar_t*, nfdchar_t**), const nfdchar_t* filterList, const char* funcName) const
     {
-        nfdchar_t* savePath = NULL;
-        nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
+        nfdchar_t* path;
+        const nfdresult_t result = NFD_DialogFunc(filterList, NULL, &path);
         if (result == NFD_OKAY)
         {
-            const std::filesystem::path path = savePath;
-            free(savePath);
-            Log << "GetSavePath() path: [" << path << ']' << std::endl;
-            return { path };
+            const std::filesystem::path fsPath = path;
+            free(path);
+            Log << funcName <<" path: [" << fsPath << ']' << std::endl;
+            return { fsPath };
         }
         else if (result == NFD_CANCEL)
-            Log << "GetSavePath() user pressed cancel" << std::endl;
+            Log << funcName << " user pressed cancel" << std::endl;
         else
         {
-            const std::string errorMsg = "Failed to open file [" + std::string(savePath) + "]";
-            Err << "GetSavePath() " << errorMsg << std::endl;
+            const std::string errorMsg = "Failed to open file [" + std::string(path) + "]";
+            Err << funcName << ' ' << errorMsg << std::endl;
             MsgBoxError(errorMsg.c_str());
         }
         return std::nullopt;
     }
 
 
-    inline std::optional<std::string> GetImagePath() const
+    inline void SaveImage() const
     {
-        nfdchar_t* outPath = NULL;
-        nfdresult_t result = NFD_OpenDialog("png,jpeg,jpg", NULL, &outPath);
-        if (result == NFD_OKAY)
-        {
-            const std::string filePath = outPath;
-            free(outPath);
-            Log << "GetImagePath() path: [" << filePath << ']' << std::endl;
-            return { filePath };
-        }
-        else if (result == NFD_CANCEL)
-            Log << "GetImagePath() user pressed cancel" << std::endl;
-        else
-        {
-            const std::string errorMsg = "Failed to open file [" + std::string(outPath) + "]";
-            Err << "GetImagePath() " << errorMsg << std::endl;
-            MsgBoxError(errorMsg.c_str());
-        }
-        return std::nullopt;
-    }
-
-
-    inline void SaveImage(const Image& img) const
-    {
-        const std::optional<std::filesystem::path> path = GetSavePath();
+        const std::optional<std::filesystem::path> path = GetPath(NFD_SaveDialog, "png", "GetSavePath()");
         if (!path.has_value())
             return;
-        if (!img.WriteToFile(path.value()))
+        if (!m_rImage.WriteToFile(path.value()))
         {
             const std::string errorMsg = "Failed to write image [" + path.value().string() + "]";
             MsgBoxError(errorMsg.c_str());
@@ -108,12 +86,14 @@ private:
     }
 
 
-    inline void LoadImg(Image& img) const
+    inline void LoadImg()
     {
-        std::optional<std::string> path = GetImagePath();
+        std::optional<std::filesystem::path> path = GetPath(NFD_OpenDialog, "png,jpeg,jpg", "GetImagePath()");
         if (!path.has_value())
             return;
-        img.LoadFromFile(path.value());
+        const std::optional<std::string> errorMsg = m_rImage.LoadFromFile(path.value().string());
+        if (errorMsg.has_value())
+            MsgBoxError(errorMsg.value().c_str());
     }
 
 
@@ -156,16 +136,16 @@ private:
     }
 
 
-    inline void Buttons() const
+    inline void Buttons()
     {
         constexpr float saveImageBtnW = 104.f;
         if (ImGui::Button("Save image", { saveImageBtnW, 0.f }))
-            SaveImage(m_rImage);
+            SaveImage();
 
         constexpr float loadImageX = saveImageBtnW + 20.f; // arbitrary offset
         ImGui::SameLine(loadImageX);
         if (ImGui::Button("Load image"))
-            LoadImg(m_rImage);
+            LoadImg();
 
         ImGui::SameLine(loadImageX + ImGui::GetItemRectSize().x + 10); // arbitrary offset
         if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
@@ -198,7 +178,13 @@ private:
 
     inline void ResizeImage(const MonitorInfo& sm, const std::vector<MonitorInfo>& mInfo)
     {
-        m_rImage.Resize(sm.w, sm.h);
+        const std::optional<std::string> errorMsg = m_rImage.Resize(sm.w, sm.h);
+        if (errorMsg.has_value())
+        {
+            MsgBoxError(errorMsg.value().c_str());
+            return;
+        }
+
         const size_t numMonitors = mInfo.size() - 1;
         if (m_SelectedMonitor != numMonitors)
             return;
