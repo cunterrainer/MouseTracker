@@ -30,7 +30,7 @@ private:
     }
 
 
-    GLuint GenerateTexture() const
+    inline GLuint GenerateTexture() const
     {
         // Create a OpenGL texture identifier
         GLuint img;
@@ -47,7 +47,7 @@ private:
     }
 
 
-    bool SetPixel(int x, int y, bool bigPixelMode)
+    inline bool SetPixel(int x, int y, bool bigPixelMode)
     {
         auto SetDataAtIndex = [this](int a, int b)
         {
@@ -142,7 +142,7 @@ public:
     }
 
 
-    bool WriteToFile(const std::filesystem::path& path) const
+    inline bool WriteToFile(const std::filesystem::path& path) const
     {
         std::string pathStr = path.string();
         std::string extension = path.extension().string();
@@ -160,7 +160,7 @@ public:
     }
 
 
-    void LoadFromFile(const std::string& path)
+    inline void LoadFromFile(const std::string& path)
     {
         int width, height, cmp;
         unsigned char* data = stbi_load(path.data(), &width, &height, &cmp, 1);

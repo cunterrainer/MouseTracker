@@ -18,14 +18,14 @@ public:
 	~Window();
 
 	// loop
-	inline bool IsOpen()     const	{ return !glfwWindowShouldClose(m_Window);	}
-	inline void Swap()       const	{ glfwSwapBuffers(m_Window);				}
-	inline void Clear()      const	{ glClear(GL_COLOR_BUFFER_BIT);				}
-	inline void PollEvents() const	{ glfwPollEvents();							}
-	inline void WaitEvents() const	{ glfwWaitEvents();							}
+	inline bool IsOpen()     const { return !glfwWindowShouldClose(m_Window); }
+	inline void Swap()       const { glfwSwapBuffers(m_Window);               }
+	inline void Clear()      const { glClear(GL_COLOR_BUFFER_BIT);            }
+	inline void PollEvents() const { glfwPollEvents();                        }
+	inline void WaitEvents() const { glfwWaitEvents();                        }
 
 	ImVec2 GetSize() const;
-	HWND GetNativeHandle() const    { return glfwGetWin32Window(m_Window);      }
+	inline HWND GetNativeHandle() const   { return glfwGetWin32Window(m_Window);     }
 
 	// ImGui
 	void ImGuiInit(const char* iniFileName = nullptr) const;

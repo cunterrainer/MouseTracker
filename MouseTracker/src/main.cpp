@@ -24,7 +24,7 @@ inline bool KeyPressed(int key)
     return GetAsyncKeyState(key) & 0x01;
 }
 
-void ImageWindow(ImVec2 wSize, const Image& image)
+inline void ImageWindow(ImVec2 wSize, const Image& image)
 {
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("Image", (bool*)0, IMGUI_WINDOW_FLAGS);
@@ -54,7 +54,7 @@ void ImageWindow(ImVec2 wSize, const Image& image)
 }
 
 
-std::optional<std::filesystem::path> GetSavePath()
+inline std::optional<std::filesystem::path> GetSavePath()
 {
     nfdchar_t* savePath = NULL;
     nfdresult_t result = NFD_SaveDialog("png", NULL, &savePath);
@@ -77,7 +77,7 @@ std::optional<std::filesystem::path> GetSavePath()
 }
 
 
-std::optional<std::string> GetImagePath()
+inline std::optional<std::string> GetImagePath()
 {
     nfdchar_t* outPath = NULL;
     nfdresult_t result = NFD_OpenDialog("png,jpeg,jpg", NULL, &outPath);
@@ -122,7 +122,7 @@ inline void LoadImg(Image& img)
 }
 
 
-std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
+inline std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
 {
     std::string selection;
     for (const MonitorInfo& i : mInfo)
@@ -135,7 +135,7 @@ std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
 }
 
 
-void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, bool& sleepWhileIdle, Image& img, size_t& selectedMonitor)
+inline void SettingsWindow(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo, bool& tracking, bool& bigPixelMode, bool& sleepWhileIdle, Image& img, size_t& selectedMonitor)
 {
     ImGui::Begin("Settings", (bool*)0, IMGUI_WINDOW_FLAGS);
     ImGui::PushStyleColor(ImGuiCol_Button, { 0.27f, 0.27f, 0.27f, 1.0f });

@@ -9,7 +9,7 @@
 #include "Monitor.h"
 #include "Log.h"
 
-void SetVideoMode(std::vector<MonitorInfo>& mInfo)
+inline void SetVideoMode(std::vector<MonitorInfo>& mInfo)
 {
     size_t count = 0;
     GLFWmonitor** m = glfwGetMonitors((int*)&count);
@@ -43,7 +43,7 @@ void SetVideoMode(std::vector<MonitorInfo>& mInfo)
 }
 
 
-void SetAllMonitors(std::vector<MonitorInfo>& mInfo)
+inline void SetAllMonitors(std::vector<MonitorInfo>& mInfo)
 {
     int x = 0;
     int y = 0;
@@ -64,7 +64,7 @@ void SetAllMonitors(std::vector<MonitorInfo>& mInfo)
 }
 
 
-std::vector<MonitorInfo> QuerryMonitors()
+inline std::vector<MonitorInfo> QuerryMonitors()
 {
     std::vector<DISPLAYCONFIG_PATH_INFO> paths;
     std::vector<DISPLAYCONFIG_MODE_INFO> modes;
