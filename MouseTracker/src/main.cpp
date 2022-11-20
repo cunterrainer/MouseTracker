@@ -227,8 +227,7 @@ int main()
     auto startTime = std::chrono::high_resolution_clock::now();
     while (window.IsOpen())
     {
-        window.Clear();
-        window.ImGuiStartFrame();
+        window.StartFrame();
         if (KeyPressed(VK_F9))
             tracking = !tracking;
         else if (KeyPressed(VK_F8))
@@ -252,9 +251,6 @@ int main()
         }
         ImageWindow(window.GetSize(), i);
         SettingsWindow(window.GetSize(), pos, mInfo, tracking, bigPixelMode, sleepWhileIdle, i, selectedMonitor);
-
-        window.ImGuiRender();
-        window.PollEvents();
-        window.Swap();
+        window.EndFrame();
     }
 }

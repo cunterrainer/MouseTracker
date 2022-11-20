@@ -23,9 +23,11 @@ public:
 	inline void Clear()      const { glClear(GL_COLOR_BUFFER_BIT);            }
 	inline void PollEvents() const { glfwPollEvents();                        }
 	inline void WaitEvents() const { glfwWaitEvents();                        }
+	inline void StartFrame() const { Clear(); ImGuiStartFrame();              }
+	inline void EndFrame()   const { ImGuiRender(); PollEvents(); Swap();     }
 
 	ImVec2 GetSize() const;
-	inline HWND GetNativeHandle() const   { return glfwGetWin32Window(m_Window);     }
+	inline HWND GetNativeHandle() const { return glfwGetWin32Window(m_Window); }
 
 	// ImGui
 	void ImGuiInit(const char* iniFileName = nullptr) const;
