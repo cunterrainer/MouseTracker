@@ -128,7 +128,7 @@ std::string ConcatSelection(const std::vector<MonitorInfo>& mInfo)
     for (const MonitorInfo& i : mInfo)
     {
         std::string tmp;
-        std::transform(i.userFriendlyName.begin(), i.userFriendlyName.end(), std::back_inserter(tmp), [](wchar_t c) { return (char)c; });
+        std::transform(i.name.begin(), i.name.end(), std::back_inserter(tmp), [](wchar_t c) { return (char)c; });
         selection += tmp + '\0';
     }
     return selection;
@@ -214,10 +214,7 @@ int main()
     const Window& window = GetWindow();
     std::vector<MonitorInfo> mInfo = GetMonitors(); // mInfo[0] primary monitor
     if (mInfo.empty())
-    {
-        MessageBoxA(window.GetNativeHandle(), "Failed to load monitor data", "Error", MB_OK | MB_ICONERROR | MB_APPLMODAL);
-        return 1;
-    }
+        return MsgBoxError("Failed to load monitor data");
     Image i(mInfo[0].w, mInfo[0].h);
 
 

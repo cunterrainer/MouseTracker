@@ -4,11 +4,8 @@
 
 struct MonitorInfo
 {
-    std::wstring instanceName;
-    std::wstring userFriendlyName;
-    std::wstring manufacturerName;
-    std::wstring productCodeId;
-    std::wstring serialNumberId;
+    std::wstring adapter;
+    std::wstring name;
     int x, y, w, h;
 };
 std::vector<MonitorInfo> GetMonitors();
