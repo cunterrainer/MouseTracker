@@ -8,6 +8,11 @@
 #include "Arial.h"
 #include "Log.h"
 
+void WindowSizeCallback(GLFWwindow*, int, int)
+{
+    GetWindow().SetResized();
+}
+
 //public
 Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, GLFWwindow* share)
 {
@@ -33,6 +38,7 @@ Window::Window(int width, int height, const char* title, GLFWmonitor* monitor, G
     const GLFWvidmode* mode = glfwGetVideoMode(glfwGetPrimaryMonitor());
     glfwSetWindowPos(m_Window, (mode->width - width) / 2, (mode->height - height) / 2);
 
+    glfwSetWindowSizeCallback(m_Window, WindowSizeCallback);
     glfwMakeContextCurrent(m_Window);
     glfwSwapInterval(1);
     glClearColor(0.27f, 0.27f, 0.27f, 1.0f);
@@ -56,9 +62,17 @@ Window::~Window()
 
 ImVec2 Window::GetSize() const
 {
-    int width, height;
-    glfwGetWindowSize(m_Window, &width, &height);
-    return { static_cast<float>(width), static_cast<float>(height) };
+    static float s_Width = 0.f;
+    static float s_Height = 0.f;
+    if (m_Resized)
+    {
+        int width, height;
+        glfwGetWindowSize(m_Window, &width, &height);
+        s_Width = (float)width;
+        s_Height = (float)height;
+        m_Resized = false;
+    }
+    return { s_Width, s_Height };
 }
 
 

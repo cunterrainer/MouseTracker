@@ -1,6 +1,7 @@
 #pragma once
 #include <filesystem>
 #include <algorithm>
+#include <optional>
 #include <cstring>
 #include <string>
 #include <new>
@@ -105,21 +106,22 @@ public:
     }
 
 
-    inline void Resize(int width, int height)
+    inline std::optional<std::string> Resize(int width, int height)
     {
         DeleteTexture();
         const size_t pixel = (size_t)(width * height);
         m_Data = new (std::nothrow) unsigned char[pixel];
         if (m_Data == nullptr)
         {
-            Err << "{Image} Failed to allocate memory for the internal array" << std::endl;
-            MsgBoxError("Failed to allocate memory for the internal array!");
-            return;
+            const std::string errorMsg = "Failed to allocate memory for the internal array!";
+            Err << "{Image} " << errorMsg << std::endl;
+            return { errorMsg };
         }
         std::memset(m_Data, 255, pixel);
         m_Width = width;
         m_Height = height;
         m_GpuImage = GenerateTexture();
+        return std::nullopt;
     }
 
 
@@ -129,7 +131,7 @@ public:
     }
 
 
-    inline GLuint GetGpuImage() const
+    constexpr GLuint GetGpuImage() const
     { 
         return m_GpuImage; 
     }
@@ -137,7 +139,7 @@ public:
 
     inline void Update(int x, int y, bool bpm)
     {
-        if (m_Data != nullptr && SetPixel(x, y, bpm))
+        if (SetPixel(x, y, bpm))
             UpdateGpu();
     }
 
@@ -160,7 +162,7 @@ public:
     }
 
 
-    inline void LoadFromFile(const std::string& path)
+    inline std::optional<std::string> LoadFromFile(const std::string& path)
     {
         int width, height, cmp;
         unsigned char* data = stbi_load(path.data(), &width, &height, &cmp, 1);
@@ -168,8 +170,7 @@ public:
         {
             const std::string errorMsg = "Failed to load image [" + path + "]";
             Err << errorMsg << std::endl;
-            MsgBoxError(errorMsg.c_str());
-            return;
+            return { errorMsg };
         }
         if (width != m_Width || height != m_Height)
         {
@@ -178,16 +179,17 @@ public:
             msg += std::to_string(m_Width) + 'x' + std::to_string(m_Height) + "\nImage: ";
             msg += std::to_string(width) + 'x' + std::to_string(height);
 
-            MsgBoxError(msg.c_str());
+            const std::string msgNl = msg;
             std::replace(msg.begin(), msg.end(), '\n', ' ');
             Err << msg << std::endl;
-            return;
+            return { msgNl };
         }
 
         std::memcpy(m_Data, data, (size_t)(m_Width * m_Height));
         stbi_image_free(data);
         UpdateGpu();
         Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
+        return std::nullopt;
     }
 
 
