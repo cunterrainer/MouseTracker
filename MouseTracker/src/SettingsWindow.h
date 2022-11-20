@@ -137,6 +137,41 @@ private:
         ImGui::SetWindowPos({ 0, 0 });
         ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
     }
+
+
+    inline void RadioButtons()
+    {
+        if (ImGui::RadioButton("Sleep while idle [F7]", m_SleepWhileIdle) || KeyPressed(VK_F7))
+            m_SleepWhileIdle = !m_SleepWhileIdle;
+
+        if (ImGui::RadioButton("Big pixel mode [F8]", m_BigPixelMode) || KeyPressed(VK_F8))
+            m_BigPixelMode = !m_BigPixelMode;
+
+        if (m_Tracking)
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 230, 0, 255));
+        else
+            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(230, 0, 0, 255));
+        if (ImGui::RadioButton("Tracking [F9]", m_Tracking) || KeyPressed(VK_F9))
+            m_Tracking = !m_Tracking;
+        ImGui::PopStyleColor();
+    }
+
+
+    inline void Buttons() const
+    {
+        constexpr float saveImageBtnW = 104.f;
+        if (ImGui::Button("Save image", { saveImageBtnW, 0.f }))
+            SaveImage(m_rImage);
+
+        constexpr float loadImageX = saveImageBtnW + 20.f; // arbitrary offset
+        ImGui::SameLine(loadImageX);
+        if (ImGui::Button("Load image"))
+            LoadImg(m_rImage);
+
+        ImGui::SameLine(loadImageX + ImGui::GetItemRectSize().x + 10); // arbitrary offset
+        if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
+            m_rImage.Reset();
+    }
 public:
     inline explicit SettingsWindow(Image& img) : m_rImage(img) {}
 
@@ -171,31 +206,8 @@ public:
             }
         }
 
-        if (ImGui::RadioButton("Sleep while idle [F7]", m_SleepWhileIdle) || KeyPressed(VK_F7))
-            m_SleepWhileIdle = !m_SleepWhileIdle;
-
-        if (ImGui::RadioButton("Big pixel mode [F8]", m_BigPixelMode) || KeyPressed(VK_F8))
-            m_BigPixelMode = !m_BigPixelMode;
-
-        if (m_Tracking)
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(0, 230, 0, 255));
-        else
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(230, 0, 0, 255));
-        if (ImGui::RadioButton("Tracking [F9]", m_Tracking) || KeyPressed(VK_F9))
-            m_Tracking = !m_Tracking;
-        ImGui::PopStyleColor();
-
-        if (ImGui::Button("Save image", { 104,0 }))
-            SaveImage(m_rImage);
-
-        const float loadImageX = ImGui::GetItemRectSize().x + 20.f;
-        ImGui::SameLine(loadImageX);
-        if (ImGui::Button("Load image"))
-            LoadImg(m_rImage);
-
-        ImGui::SameLine(loadImageX + ImGui::GetItemRectSize().x + 10);
-        if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
-            m_rImage.Reset();
+        RadioButtons();
+        Buttons();
         ImGui::PopStyleColor(10);
         ImGui::End();
     }
