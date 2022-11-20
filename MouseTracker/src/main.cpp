@@ -12,6 +12,7 @@
 
 #include "Window.h"
 #include "Monitor.h"
+#include "Clang.h"
 #include "Image.h"
 #include "Log.h"
 
