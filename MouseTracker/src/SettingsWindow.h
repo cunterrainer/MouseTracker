@@ -14,6 +14,7 @@
 #include "Monitor.h"
 #include "Window.h"
 #include "Image.h"
+#include "Log.h"
 
 #define CURSOR_POS(cPos, mPos) (cPos - mPos)
 

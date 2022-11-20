@@ -13,29 +13,32 @@
 #include "Image.h"
 #include "Log.h"
 
-inline void ImageWindow(ImVec2 wSize, const Image& image)
+inline void ImageWindow(ImVec2 wSize, ImVec2 imgRes, GLuint gpuImage)
 {
+    static constexpr float oneQuarter = 1.f / 4.f;
+    static constexpr float threeQuarters = 3.f / 4.f;
+
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
     ImGui::Begin("Image", NULL, IMGUI_WINDOW_FLAGS);
-    ImGui::SetWindowPos({ 0, wSize.y * (1.f / 4.f) });
-    ImGui::SetWindowSize({ wSize.x, wSize.y * (3.f / 4.f)});
+    ImGui::SetWindowPos({ 0, wSize.y * oneQuarter });
+    ImGui::SetWindowSize({ wSize.x, wSize.y * threeQuarters });
 
-    const float y = image.Resolution().y / (wSize.y * (3.f / 4.f));
-    const float xPos = (wSize.x - image.Resolution().x / y) / 2.f;
+    const float yRatio = imgRes.y / (wSize.y * threeQuarters);
+    const float xPos = (wSize.x - imgRes.x / yRatio) / 2.f;
     if (xPos >= 0.f)
     {
         const ImVec2 p = ImGui::GetCursorScreenPos();
         ImGui::SetCursorScreenPos(ImVec2(p.x + xPos, p.y));
-        ImGui::Image((void*)(intptr_t)image.GetGpuImage(), { image.Resolution().x / y, image.Resolution().y / y });
+        ImGui::Image((void*)(intptr_t)gpuImage, { imgRes.x / yRatio, imgRes.y / yRatio });
     }
     else
     {
-        const float x = image.Resolution().x / wSize.x;
-        const float yPos = (wSize.y * (3.f / 4.f) - image.Resolution().y / x) / 2.f;
+        const float xRatio = imgRes.x / wSize.x;
+        const float yPos = (wSize.y * threeQuarters - imgRes.y / xRatio) / 2.f;
 
         const ImVec2 p = ImGui::GetCursorScreenPos();
         ImGui::SetCursorScreenPos(ImVec2(p.x, p.y + yPos));
-        ImGui::Image((void*)(intptr_t)image.GetGpuImage(), { image.Resolution().x / x, image.Resolution().y / x });
+        ImGui::Image((void*)(intptr_t)gpuImage, { imgRes.x / xRatio, imgRes.y / xRatio });
     }
 
     ImGui::End();
@@ -72,8 +75,9 @@ int main()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
-        ImageWindow(window.GetSize(), i);
+        ImageWindow(window.GetSize(), i.Resolution(), i.GetGpuImage());
         sw.Show(window.GetSize(), pos, mInfo);
         window.EndFrame();
     }
+    return 0;
 }
