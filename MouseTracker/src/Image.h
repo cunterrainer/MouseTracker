@@ -139,7 +139,7 @@ public:
 
     inline void Update(int x, int y, bool bpm)
     {
-        if (m_Data != nullptr && SetPixel(x, y, bpm))
+        if (SetPixel(x, y, bpm))
             UpdateGpu();
     }
 

@@ -75,8 +75,9 @@ int main()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
-        ImageWindow(window.GetSize(), i.Resolution(), i.GetGpuImage());
-        sw.Show(window.GetSize(), pos, mInfo);
+        const ImVec2 windowSize = window.GetSize();
+        ImageWindow(windowSize, i.Resolution(), i.GetGpuImage());
+        sw.Show(windowSize, pos, mInfo);
         window.EndFrame();
     }
     return 0;

@@ -13,6 +13,7 @@ class Window
 {
 private:
 	GLFWwindow* m_Window = nullptr;
+	mutable bool m_Resized = true;
 public:
 	Window(int width = 1600, int height = 920, const char* title = "Mouse Tracker", GLFWmonitor* monitor = NULL, GLFWwindow* share = NULL);
 	~Window();
@@ -28,6 +29,7 @@ public:
 
 	ImVec2 GetSize() const;
 	inline HWND GetNativeHandle() const { return glfwGetWin32Window(m_Window); }
+	inline void SetResized()      const { m_Resized = true;                    }
 
 	// ImGui
 	void ImGuiInit(const char* iniFileName = nullptr) const;
