@@ -5,7 +5,6 @@
 #include <Windows.h>
 
 #include "ImGui/imgui.h"
-#include "nfd/nfd.h"
 
 #include "SettingsWindow.h"
 #include "Window.h"
@@ -52,8 +51,8 @@ int main()
         return MsgBoxError("Failed to load monitor data");
     Image i(mInfo[0].w, mInfo[0].h);
 
-    POINT pos{ 0,0 };
-    POINT prevPos{ 1,1 };
+    POINT pos{0, 0};
+    POINT prevPos{1, 1};
     auto startTime = std::chrono::high_resolution_clock::now();
     SettingsWindow sw(i);
     while (window.IsOpen())

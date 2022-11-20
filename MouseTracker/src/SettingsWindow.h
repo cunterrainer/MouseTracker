@@ -36,15 +36,15 @@ private:
         ImGui::PushStyleColor(ImGuiCol_ButtonActive, grey);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, dark);
         ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, grey);
+        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, grey);
         ImGui::PushStyleColor(ImGuiCol_Header, dark);
         ImGui::PushStyleColor(ImGuiCol_HeaderHovered, grey);
         ImGui::PushStyleColor(ImGuiCol_HeaderActive, dark);
         ImGui::PushStyleColor(ImGuiCol_CheckMark, lightGrey);
-        ImGui::PushStyleColor(ImGuiCol_FrameBgActive, grey);
     }
 
     // not using glfw since it doesn't record key presses if window isn't focused
-    inline bool KeyPressed(int key) const
+    static inline bool KeyPressed(int key)
     {
         return GetAsyncKeyState(key) & 0x01;
     }
@@ -130,12 +130,11 @@ private:
     }
 
 
-    inline void SetWindowUp(ImVec2 wSize) const
+    inline void TextLabels(POINT pos, const std::vector<MonitorInfo>& mInfo) const
     {
-        PushStyleColors();
-        ImGui::Begin("Settings", NULL, IMGUI_WINDOW_FLAGS);
-        ImGui::SetWindowPos({ 0, 0 });
-        ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
+        const MonitorInfo& sm = mInfo[m_SelectedMonitor];
+        ImGui::LabelText("Resolution", "%dx%d", sm.w, sm.h);
+        ImGui::LabelText("Cursor position", "x=%ld y=%ld", CURSOR_POS(pos.x, sm.x), CURSOR_POS(pos.y, sm.y));
     }
 
 
@@ -172,40 +171,56 @@ private:
         if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
             m_rImage.Reset();
     }
+
+
+    inline void MonitorSelectionCombo(const std::vector<MonitorInfo>& mInfo)
+    {
+        static const std::string selectionText = ConcatSelection(mInfo);
+
+        const size_t prevMonitor = m_SelectedMonitor;
+        if (!ImGui::Combo("##Monitor", (int*)&m_SelectedMonitor, selectionText.c_str()))
+            return;
+
+        const MonitorInfo& pm = mInfo[prevMonitor];
+        const MonitorInfo& sm = mInfo[m_SelectedMonitor];
+        if (pm.w == sm.w && pm.h == sm.h)
+            return;
+
+        // Image has to resized because resolutions have changed
+        if (MsgBoxWarning("Changing the monitor will cause the image to be lost because the monitors have different resolutions! Do you want to continue?") != IDYES)
+        {
+            m_SelectedMonitor = prevMonitor;
+            return;
+        }
+        ResizeImage(sm, mInfo);
+    }
+
+
+    inline void ResizeImage(const MonitorInfo& sm, const std::vector<MonitorInfo>& mInfo)
+    {
+        m_rImage.Resize(sm.w, sm.h);
+        const size_t numMonitors = mInfo.size() - 1;
+        if (m_SelectedMonitor != numMonitors)
+            return;
+
+        // 'All' was selected
+        m_rImage.SetAllPixel(80); // Not monitor area on the image
+        for (size_t i = 0; i < numMonitors; ++i)
+        {
+            m_rImage.SetPixelRange(CURSOR_POS(mInfo[i].x, mInfo.back().x), CURSOR_POS(mInfo[i].y, mInfo.back().y), mInfo[i].w, mInfo[i].h, 255);
+        }
+    }
 public:
     inline explicit SettingsWindow(Image& img) : m_rImage(img) {}
 
     inline void Show(ImVec2 wSize, POINT pos, const std::vector<MonitorInfo>& mInfo)
     {
-        SetWindowUp(wSize);
-        ImGui::LabelText("Resolution", "%dx%d", mInfo[m_SelectedMonitor].w, mInfo[m_SelectedMonitor].h);
-        ImGui::LabelText("Cursor position", "x=%ld y=%ld", CURSOR_POS(pos.x, mInfo[m_SelectedMonitor].x), CURSOR_POS(pos.y, mInfo[m_SelectedMonitor].y));
-
-        const size_t prevMonitor = m_SelectedMonitor;
-        static const std::string mSelection = ConcatSelection(mInfo);
-        if (ImGui::Combo("##Monitor", (int*)&m_SelectedMonitor, mSelection.c_str()))
-        {
-            const MonitorInfo& pm = mInfo[prevMonitor];
-            const MonitorInfo& sm = mInfo[m_SelectedMonitor];
-            if (pm.w != sm.w || pm.h != sm.h)
-            {
-                if (MsgBoxWarning("Changing the monitor will cause the image to be lost because the monitors have different resolutions! Do you want to continue?") == IDYES)
-                {
-                    m_rImage.Resize(sm.w, sm.h);
-                    if (m_SelectedMonitor == mInfo.size() - 1)
-                    {
-                        m_rImage.SetAllPixel(80);
-                        for (size_t i = 0; i < mInfo.size() - 1; ++i)
-                        {
-                            m_rImage.SetPixelRange(CURSOR_POS(mInfo[i].x, mInfo.back().x), CURSOR_POS(mInfo[i].y, mInfo.back().y), mInfo[i].w, mInfo[i].h, 255);
-                        }
-                    }
-                }
-                else
-                    m_SelectedMonitor = prevMonitor;
-            }
-        }
-
+        PushStyleColors();
+        ImGui::Begin("Settings", NULL, IMGUI_WINDOW_FLAGS);
+        ImGui::SetWindowPos({ 0, 0 });
+        ImGui::SetWindowSize({ wSize.x, wSize.y * (1.f / 4.f) });
+        TextLabels(pos, mInfo);
+        MonitorSelectionCombo(mInfo);
         RadioButtons();
         Buttons();
         ImGui::PopStyleColor(10);
