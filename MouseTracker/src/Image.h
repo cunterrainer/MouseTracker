@@ -163,7 +163,7 @@ public:
         size_t mainDataIndex = 0;
         for (size_t i = 0; i < (size_t)(m_Width * m_Height); ++i)
         {
-            data[i] = (m_Data[mainDataIndex] + m_Data[mainDataIndex + 1] + m_Data[mainDataIndex + 2]) / 3;
+            data[i] = static_cast<unsigned char>((m_Data[mainDataIndex] + m_Data[mainDataIndex + 1] + m_Data[mainDataIndex + 2]) / 3);
             mainDataIndex += 4;
         }
     }
@@ -175,7 +175,7 @@ public:
         if (AlphaIsNeeded())
             return stbiWriteWAlphaFunc();
 
-        unsigned char* data = new (std::nothrow) unsigned char[m_Width * m_Height];
+        unsigned char* data = new (std::nothrow) unsigned char[(size_t)m_Width * (size_t)m_Height];
         if (data == nullptr)
             return stbiWriteWAlphaFunc();
 
