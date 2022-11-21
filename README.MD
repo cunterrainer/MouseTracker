@@ -6,7 +6,7 @@ An application to track your mouse movement and visualize it for you. You can tr
 
 # Build
 
-This project uses premake as it's build system. The premake5 binaries for windows and linux are already provided.  
+Windows only! This project uses premake as it's build system. The premake5 binaries are already provided.  
 For additional information use:
 ```
 vendor\premake5 --help
