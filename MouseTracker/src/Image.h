@@ -147,6 +147,45 @@ public:
     }
 
 
+    inline int AlphaIsNeeded() const
+    {
+        for (size_t i = 3; i < (size_t)(m_Width * m_Height * Channel); i += 4)
+        {
+            if (m_Data[i] == 0)
+                return true;
+        }
+        return false;
+    }
+
+
+    inline void RemoveGBAFromData(unsigned char* data) const
+    {
+        size_t mainDataIndex = 0;
+        for (size_t i = 0; i < (size_t)(m_Width * m_Height); ++i)
+        {
+            data[i] = (m_Data[mainDataIndex] + m_Data[mainDataIndex + 1] + m_Data[mainDataIndex + 2]) / 3;
+            mainDataIndex += 4;
+        }
+    }
+
+
+    inline int SaveToFile(const char* path) const
+    {
+        const auto stbiWriteWAlphaFunc = [&](){ return stbi_write_png(path, m_Width, m_Height, Channel, m_Data, m_Width * Channel); };
+        if (AlphaIsNeeded())
+            return stbiWriteWAlphaFunc();
+
+        unsigned char* data = new (std::nothrow) unsigned char[m_Width * m_Height];
+        if (data == nullptr)
+            return stbiWriteWAlphaFunc();
+
+        RemoveGBAFromData(data);
+        const int error = stbi_write_png(path, m_Width, m_Height, 1, data, m_Width);
+        delete[] data;
+        return error;
+    }
+
+
     inline bool WriteToFile(const std::filesystem::path& path) const
     {
         std::string pathStr = path.string();
@@ -155,7 +194,7 @@ public:
         if (extension != ".png")
             pathStr += ".png";
 
-        if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, Channel, m_Data, m_Width*Channel) == 0)
+        if(SaveToFile(pathStr.c_str()) == 0)
         {
             Err << "Failed to write image w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
             return false;
