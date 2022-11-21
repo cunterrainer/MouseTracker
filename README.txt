@@ -1,1 +1,0 @@
-This branch is in the exact same state as the master branch. The only difference is this branch is using premake5 as it's build system.
