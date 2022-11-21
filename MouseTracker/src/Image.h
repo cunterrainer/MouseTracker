@@ -18,6 +18,7 @@
 class Image
 {
 private:
+    static constexpr int Channel = 4;
     int m_Width  = 0;
     int m_Height = 0;
     unsigned char* m_Data = nullptr;
@@ -27,7 +28,7 @@ private:
     {
         if (x < 0 || y < 0 || x >= m_Width || y >= m_Height)
             return -1;
-        return m_Width * y + x;
+        return (m_Width * y + x) * Channel;
     }
 
 
@@ -42,7 +43,7 @@ private:
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-        glTexImage2D(GL_TEXTURE_2D, 0, 1, m_Width, m_Height, 0, GL_RED, GL_UNSIGNED_BYTE, m_Data);
+        glTexImage2D(GL_TEXTURE_2D, 0, Channel, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_Data);
         Log << "Generated opengl texture w: " << m_Width << " h: " << m_Height << " texture: " << img << std::endl;
         return img;
     }
@@ -55,7 +56,9 @@ private:
             const int index = GetIndex(a, b);
             if (index != -1)
             {
-                m_Data[index] = 0;
+                m_Data[index] = 0;   // R
+                m_Data[index+1] = 0; // G
+                m_Data[index+2] = 0; // B
                 return true;
             }
             return false;
@@ -91,7 +94,7 @@ private:
     inline void UpdateGpu() const
     {
         glBindTexture(GL_TEXTURE_2D, m_GpuImage);
-        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RED, GL_UNSIGNED_BYTE, m_Data);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, m_Data);
     }
 public:
     inline Image(int width, int height)
@@ -109,7 +112,7 @@ public:
     inline std::optional<std::string> Resize(int width, int height)
     {
         DeleteTexture();
-        const size_t pixel = (size_t)(width * height);
+        const size_t pixel = (size_t)(width * height * Channel);
         m_Data = new (std::nothrow) unsigned char[pixel];
         if (m_Data == nullptr)
         {
@@ -152,7 +155,7 @@ public:
         if (extension != ".png")
             pathStr += ".png";
 
-        if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, 1, m_Data, m_Width) == 0)
+        if (stbi_write_png(pathStr.c_str(), m_Width, m_Height, Channel, m_Data, m_Width*Channel) == 0)
         {
             Err << "Failed to write image w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
             return false;
@@ -165,7 +168,7 @@ public:
     inline std::optional<std::string> LoadFromFile(const std::string& path)
     {
         int width, height, cmp;
-        unsigned char* data = stbi_load(path.data(), &width, &height, &cmp, 1);
+        unsigned char* data = stbi_load(path.data(), &width, &height, &cmp, Channel);
         if (data == NULL)
         {
             const std::string errorMsg = "Failed to load image [" + path + "]";
@@ -185,7 +188,7 @@ public:
             return { msgNl };
         }
 
-        std::memcpy(m_Data, data, (size_t)(m_Width * m_Height));
+        std::memcpy(m_Data, data, (size_t)(m_Width * m_Height * Channel));
         stbi_image_free(data);
         UpdateGpu();
         Log << "Successfully loaded image from file w: " << m_Width << " h: " << m_Height << " [" << path << "]" << std::endl;
@@ -195,8 +198,7 @@ public:
 
     inline void Reset()
     {
-        const size_t pixel = (size_t)(m_Height * m_Width);
-        std::memset(m_Data, 255, pixel);
+        std::memset(m_Data, 255, (size_t)(m_Width * m_Height * Channel));
         UpdateGpu();
         Log << "{Image} Reset image w: " << m_Width << " h: " << m_Height << std::endl;
     }
@@ -204,7 +206,7 @@ public:
 
     inline void SetAllPixel(int c)
     {
-        std::memset(m_Data, c, (size_t)(m_Width * m_Height));
+        std::memset(m_Data, c, (size_t)(m_Width * m_Height * Channel));
         UpdateGpu();
     }
 
@@ -217,7 +219,12 @@ public:
             {
                 const int index = GetIndex(i, k);
                 if (index != -1)
+                {
                     m_Data[index] = c;
+                    m_Data[index+1] = c;
+                    m_Data[index+2] = c;
+                    m_Data[index+3] = c;
+                }
             }
         }
         UpdateGpu();

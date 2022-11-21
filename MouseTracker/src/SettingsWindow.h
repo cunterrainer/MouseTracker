@@ -21,11 +21,11 @@
 class SettingsWindow
 {
 private:
+    Image& m_rImage;
     bool m_Tracking = false;
     bool m_BigPixelMode = false;
     bool m_SleepWhileIdle = true;
     size_t m_SelectedMonitor = 0;
-    Image& m_rImage;
 private:
     static inline void PushStyleColors()
     {
@@ -137,7 +137,7 @@ private:
     }
 
 
-    inline void Buttons()
+    inline void Buttons(const std::vector<MonitorInfo>& mInfo)
     {
         constexpr float saveImageBtnW = 104.f;
         if (ImGui::Button("Save image", { saveImageBtnW, 0.f }))
@@ -150,7 +150,25 @@ private:
 
         ImGui::SameLine(loadImageX + ImGui::GetItemRectSize().x + 10); // arbitrary offset
         if (ImGui::Button("Reset image") && MsgBoxWarning("Do you really want to reset the tracking image? This change can't be undone!") == IDYES)
+        {
             m_rImage.Reset();
+            SetMultiMonitorImageAlpha(mInfo);
+        }
+    }
+
+
+    inline void SetMultiMonitorImageAlpha(const std::vector<MonitorInfo>& mInfo)
+    {
+        const size_t numMonitors = mInfo.size() - 1;
+        if (m_SelectedMonitor != numMonitors)
+            return;
+
+        // 'All' was selected
+        m_rImage.SetAllPixel(0); // Not monitor area on the image
+        for (size_t i = 0; i < numMonitors; ++i)
+        {
+            m_rImage.SetPixelRange(CURSOR_POS(mInfo[i].x, mInfo.back().x), CURSOR_POS(mInfo[i].y, mInfo.back().y), mInfo[i].w, mInfo[i].h, 255);
+        }
     }
 
 
@@ -185,17 +203,7 @@ private:
             MsgBoxError(errorMsg.value().c_str());
             return;
         }
-
-        const size_t numMonitors = mInfo.size() - 1;
-        if (m_SelectedMonitor != numMonitors)
-            return;
-
-        // 'All' was selected
-        m_rImage.SetAllPixel(80); // Not monitor area on the image
-        for (size_t i = 0; i < numMonitors; ++i)
-        {
-            m_rImage.SetPixelRange(CURSOR_POS(mInfo[i].x, mInfo.back().x), CURSOR_POS(mInfo[i].y, mInfo.back().y), mInfo[i].w, mInfo[i].h, 255);
-        }
+        SetMultiMonitorImageAlpha(mInfo);
     }
 public:
     inline explicit SettingsWindow(Image& img) : m_rImage(img) {}
@@ -209,7 +217,7 @@ public:
         TextLabels(pos, mInfo);
         MonitorSelectionCombo(mInfo);
         RadioButtons();
-        Buttons();
+        Buttons(mInfo);
         ImGui::PopStyleColor(10);
         ImGui::End();
     }
