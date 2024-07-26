@@ -15,7 +15,7 @@ vendor\premake5 --help
 ## Clone
 
 ```
-git clone https://github.com/pyvyx/MouseTracker.git
+git clone https://github.com/cunterrainer/MouseTracker.git
 ```
 ```
 cd MouseTracker
